@@ -1,0 +1,42 @@
+
+services:
+
+  mysql:
+
+    image: mysql:8.4
+
+    container_name: marketplace-mysql
+
+    restart: always
+
+    environment:
+      MYSQL_DATABASE: marketplace
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: marketplace
+      MYSQL_PASSWORD: Manjari@1234
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+
+    build: .
+
+    container_name: marketplace-backend
+
+    depends_on:
+      - mysql
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/marketplace
+      SPRING_DATASOURCE_USERNAME: marketplace
+      SPRING_DATASOURCE_PASSWORD: Manjari@1234
+
+volumes:
+  mysql_data:
