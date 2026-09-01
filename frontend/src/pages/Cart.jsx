@@ -1,113 +1,294 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
+
 import CartList from "../components/cart/CartList";
 import OrderSummary from "../components/cart/OrderSummary";
-import BackButton from "../components/common/BackButton";
+
 import {
-  getCart,
-  updateCartQuantity,
-  removeCartItem,
+    getCart,
+    updateCartQuantity,
+    removeCartItem,
+    clearCart,
 } from "../services/cartService";
 
 const Cart = () => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadCart();
-  }, []);
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  async function loadCart() {
-    try {
-      const response = await getCart();
-      setItems(response.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+    useEffect(() => {
+        loadCart();
+    }, []);
+
+    const loadCart = async () => {
+
+        try {
+
+            setLoading(true);
+
+            const response = await getCart();
+
+            console.log("CART RESPONSE:", response.data);
+
+            /*
+             * Backend ApiResponse:
+             *
+             * {
+             *   success: true,
+             *   message: "...",
+             *   data: [...]
+             * }
+             */
+
+            const cartData =
+                Array.isArray(response.data)
+                    ? response.data
+                    : Array.isArray(response.data?.data)
+                        ? response.data.data
+                        : [];
+
+            setItems(cartData);
+
+        } catch (error) {
+
+            console.error("Failed to load cart:", error);
+
+            toast.error("Unable to load cart.");
+
+            setItems([]);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    };
+
+
+    const handleIncrease = async (item) => {
+
+        try {
+
+            await updateCartQuantity(
+                item.id,
+                item.quantity + 1
+            );
+
+            await loadCart();
+
+        } catch (error) {
+
+            console.error(error);
+
+            toast.error(
+                "Unable to update quantity."
+            );
+
+        }
+    };
+
+
+    const handleDecrease = async (item) => {
+
+        if (item.quantity <= 1) {
+            return;
+        }
+
+        try {
+
+            await updateCartQuantity(
+                item.id,
+                item.quantity - 1
+            );
+
+            await loadCart();
+
+        } catch (error) {
+
+            console.error(error);
+
+            toast.error(
+                "Unable to update quantity."
+            );
+
+        }
+    };
+
+
+    const handleDelete = async (id) => {
+
+        try {
+
+            await removeCartItem(id);
+
+            toast.success(
+                "Item removed from cart."
+            );
+
+            await loadCart();
+
+        } catch (error) {
+
+            console.error(error);
+
+            toast.error(
+                "Unable to remove item."
+            );
+
+        }
+    };
+
+
+    const handleClearCart = async () => {
+
+        try {
+
+            await clearCart();
+
+            setItems([]);
+
+            toast.success(
+                "Cart cleared successfully."
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            toast.error(
+                "Unable to clear cart."
+            );
+
+        }
+    };
+
+
+    if (loading) {
+
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+
+                <div className="text-center">
+
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+                    <p className="mt-4 text-slate-500">
+                        Loading your cart...
+                    </p>
+
+                </div>
+
+            </div>
+        );
+
     }
-  }
 
-  async function increaseQuantity(item) {
-    await updateCartQuantity(item.id, item.quantity + 1);
-    loadCart();
-  }
 
-  async function decreaseQuantity(item) {
-    if (item.quantity === 1) return;
-
-    await updateCartQuantity(item.id, item.quantity - 1);
-    loadCart();
-  }
-
-  async function removeItem(id) {
-    if (!window.confirm("Remove this product from cart?")) return;
-
-    await removeCartItem(id);
-    loadCart();
-  }
-
-  if (loading) {
     return (
-      <div className="max-w-7xl mx-auto py-20 text-center">Loading cart...</div>
-    );
-  }
 
-  if (items.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto py-24 text-center">
-        <img
-          src="https://placehold.co/300x250?text=Empty+Cart"
-          alt="Empty Cart"
-          className="mx-auto mb-8"
-        />
+        <div className="min-h-screen bg-slate-50 py-12">
 
-        <h1 className="text-4xl font-bold text-slate-800">
-          Your Cart is Empty
-        </h1>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        <p className="text-slate-500 mt-4">
-          Looks like you haven't added anything yet.
-        </p>
+                {/* Header */}
 
-        <Link
-          to="/"
-          className="inline-block mt-8 bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700"
-        >
-          Continue Shopping
-        </Link>
-        <Link
-          to="/checkout"
-          className="mt-8 block w-full rounded-xl bg-blue-600 py-4 text-center text-white hover:bg-blue-700"
-        >
-          Proceed to Checkout
-        </Link>
-      </div>
-    );
-  }
+                <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
-  return (
-    <div className="bg-slate-100 min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 py-10">
-        <BackButton />
+                    <div>
 
-        <h1 className="text-4xl font-bold mb-10">Shopping Cart</h1>
+                        <h1 className="text-4xl font-bold text-slate-900">
+                            Shopping Cart
+                        </h1>
 
-        <div className="grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
-            <CartList
-              items={items}
-              onIncrease={increaseQuantity}
-              onDecrease={decreaseQuantity}
-              onDelete={removeItem}
-            />
-          </div>
+                        <p className="mt-2 text-slate-500">
+                            Review your items before checkout.
+                        </p>
 
-          <OrderSummary items={items} />
+                    </div>
+
+                    {items.length > 0 && (
+
+                        <button
+                            onClick={handleClearCart}
+                            className="rounded-xl border border-red-200 bg-white px-5 py-3 font-semibold text-red-600 transition hover:bg-red-50"
+                        >
+                            Clear Cart
+                        </button>
+
+                    )}
+
+                </div>
+
+
+                {/* Empty Cart */}
+
+                {items.length === 0 ? (
+
+                    <div className="rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm">
+
+                        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50">
+
+                            <span className="text-3xl">
+                                🛒
+                            </span>
+
+                        </div>
+
+                        <h2 className="mt-6 text-2xl font-bold text-slate-800">
+                            Your cart is empty
+                        </h2>
+
+                        <p className="mt-3 text-slate-500">
+                            Add some products to your cart and they will appear here.
+                        </p>
+
+                        <Link
+                            to="/products"
+                            className="mt-7 inline-block rounded-xl bg-blue-600 px-7 py-3 font-semibold text-white transition hover:bg-blue-700"
+                        >
+                            Browse Products
+                        </Link>
+
+                    </div>
+
+                ) : (
+
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+
+                        {/* Cart Items */}
+
+                        <div className="lg:col-span-2">
+
+                            <CartList
+                                items={items}
+                                onIncrease={handleIncrease}
+                                onDecrease={handleDecrease}
+                                onDelete={handleDelete}
+                            />
+
+                        </div>
+
+
+                        {/* Summary */}
+
+                        <div>
+
+                            <OrderSummary
+                                items={items}
+                            />
+
+                        </div>
+
+                    </div>
+
+                )}
+
+            </div>
+
         </div>
-      </div>
-    </div>
-  );
+
+    );
 };
 
 export default Cart;

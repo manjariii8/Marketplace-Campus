@@ -1,9 +1,18 @@
 import api from "../api/axios";
 
-export const getSellerProducts = () => {
-  return api.get("/seller/products");
+
+const sellerService = {
+  getProfile: () => {
+    return api.get("/seller/profile");
+  },
+
+  createProfile: (payload) => {
+    return api.post("/seller/profile", payload);
+  },
+
+  updateProfile: (payload) => {
+    return api.put("/seller/profile", payload);
+  },
 };
 
-export const deleteSellerProduct = (id) => {
-  return api.delete(`/products/${id}`);
-};
+export default sellerService;

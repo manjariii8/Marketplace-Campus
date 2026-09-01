@@ -1,81 +1,112 @@
-const OrderSummary = ({ items }) => {
+import { useNavigate } from "react-router-dom";
 
-    const subtotal = items.reduce(
+const OrderSummary = ({ items = [] }) => {
 
-        (sum, item) => sum + item.totalPrice,
+    const navigate = useNavigate();
 
+    const safeItems = Array.isArray(items)
+        ? items
+        : [];
+
+    const subtotal = safeItems.reduce(
+        (sum, item) => {
+            return sum + Number(item.totalPrice || 0);
+        },
         0
-
     );
 
-    const shipping = subtotal > 1000 ? 0 : 100;
+    const shipping =
+        subtotal === 0
+            ? 0
+            : subtotal > 1000
+                ? 0
+                : 100;
 
     const tax = subtotal * 0.18;
 
-    const total = subtotal + shipping + tax;
+    const total =
+        subtotal +
+        shipping +
+        tax;
+
 
     return (
 
-        <div className="bg-white rounded-xl shadow p-6 sticky top-24">
+        <div className="sticky top-24 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-            <h2 className="text-2xl font-bold">
-
+            <h2 className="text-2xl font-bold text-slate-900">
                 Order Summary
-
             </h2>
 
-            <div className="space-y-4 mt-8">
 
-                <div className="flex justify-between">
+            <div className="mt-8 space-y-4">
 
-                    <span>Subtotal</span>
+                <div className="flex justify-between text-slate-600">
 
-                    <span>₹ {subtotal.toFixed(2)}</span>
+                    <span>
+                        Subtotal
+                    </span>
+
+                    <span className="font-medium text-slate-900">
+                        ₹ {subtotal.toFixed(2)}
+                    </span>
 
                 </div>
 
-                <div className="flex justify-between">
 
-                    <span>Shipping</span>
+                <div className="flex justify-between text-slate-600">
 
                     <span>
+                        Shipping
+                    </span>
 
-                        ₹ {shipping}
+                    <span className="font-medium text-slate-900">
+
+                        {shipping === 0
+                            ? "FREE"
+                            : `₹ ${shipping}`
+                        }
 
                     </span>
 
                 </div>
 
-                <div className="flex justify-between">
 
-                    <span>Tax</span>
+                <div className="flex justify-between text-slate-600">
 
                     <span>
+                        Tax (18%)
+                    </span>
 
+                    <span className="font-medium text-slate-900">
                         ₹ {tax.toFixed(2)}
-
                     </span>
 
                 </div>
 
-                <hr />
 
-                <div className="flex justify-between font-bold text-xl">
+                <hr className="border-slate-200" />
 
-                    <span>Total</span>
+
+                <div className="flex justify-between text-xl font-bold">
 
                     <span>
+                        Total
+                    </span>
 
+                    <span className="text-blue-700">
                         ₹ {total.toFixed(2)}
-
                     </span>
 
                 </div>
 
             </div>
 
+
             <button
-                className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl"
+                disabled={safeItems.length === 0}
+                onClick={() => navigate("/checkout")}
+                className="mt-8 w-full rounded-xl bg-blue-600 py-4 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
                 Proceed to Checkout
             </button>
@@ -83,7 +114,6 @@ const OrderSummary = ({ items }) => {
         </div>
 
     );
-
 };
 
 export default OrderSummary;

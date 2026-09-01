@@ -31,7 +31,7 @@ const CartItem = ({
 
                 <p className="text-gray-500 mt-2">
 
-                    ₹ {item.price}
+                    ₹ {Number(item.price || 0).toFixed(2)}
 
                 </p>
 
@@ -70,7 +70,7 @@ const CartItem = ({
 
             <div className="text-2xl font-bold">
 
-                ₹ {item.totalPrice}
+                ₹ {Number(item.totalPrice || 0).toFixed(2)}
 
             </div>
 

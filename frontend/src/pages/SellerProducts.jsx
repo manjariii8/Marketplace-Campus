@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ProductTable from "../components/seller/ProductTable";
 import { deleteProduct } from "../services/productService";
+import toast from "react-hot-toast";
 
 const SellerProducts = () => {
     const [products, setProducts] = useState([]);
@@ -19,10 +20,10 @@ const SellerProducts = () => {
         try {
             await deleteProduct(id);
             await loadProducts();
-            alert("Product deleted successfully.");
+            toast.success("Product deleted successfully.");
         } catch (error) {
             console.error(error);
-            alert("Unable to delete product.");
+            toast.error("Unable to delete product.");
         }
     };
 

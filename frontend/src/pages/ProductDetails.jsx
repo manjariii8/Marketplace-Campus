@@ -1,76 +1,100 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
+
+import { getProduct } from "../services/productService";
+
 import ProductGallery from "../components/product/ProductGallery";
 import ProductInfo from "../components/product/ProductInfo";
-import RelatedProducts from "../components/product/RelatedProducts";
-import { getProduct } from "../services/productService";
-import BackButton from "../components/common/BackButton";
 
 const ProductDetails = () => {
-
   const { id } = useParams();
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] =
+    useState(null);
 
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] =
+    useState(1);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     loadProduct();
   }, [id]);
 
-  async function loadProduct() {
-
+  const loadProduct = async () => {
     try {
+      setLoading(true);
 
-      const response = await getProduct(id);
+      const response =
+        await getProduct(id);
+
+      console.log(
+        "Product response:",
+        response.data
+      );
 
       setProduct(response.data);
 
     } catch (error) {
+      console.error(
+        "Failed to load product:",
+        error
+      );
 
-      console.error(error);
+      toast.error(
+        "Unable to load product."
+      );
 
+    } finally {
+      setLoading(false);
     }
+  };
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-slate-500">
+          Loading product...
+        </p>
+      </div>
+    );
   }
 
   if (!product) {
-
     return (
-      <div className="text-center py-20">
-        Loading...
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-slate-500">
+          Product not found.
+        </p>
       </div>
     );
-
   }
 
   return (
+    <div className="min-h-screen bg-slate-50 py-12">
 
-    <div className="bg-slate-50 min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-      <div className="max-w-7xl mx-auto px-6 py-14 grid lg:grid-cols-2 gap-12">
-        <BackButton/>
+        <div className="grid gap-12 lg:grid-cols-2">
 
-        <ProductGallery product={product} />
+          <ProductGallery
+            product={product}
+          />
 
-        <ProductInfo
-          product={product}
-          quantity={quantity}
-          setQuantity={setQuantity}
-        />
+          <ProductInfo
+            product={product}
+            quantity={quantity}
+            setQuantity={setQuantity}
+          />
 
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 pb-20">
-
-        <RelatedProducts />
+        </div>
 
       </div>
 
     </div>
-
   );
-
 };
 
 export default ProductDetails;

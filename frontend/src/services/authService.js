@@ -1,9 +1,12 @@
 import api from "../api/axios";
 
-export const registerUser = (data) => {
-  return api.post("/auth/register", data);
+const authService = {
+  register: (payload) => api.post("/auth/register", payload),
+
+  login: (credentials) => api.post("/auth/login", credentials),
+
+  getProfile: () =>
+    api.get("/auth/profile"),
 };
 
-export const loginUser = (data) => {
-  return api.post("/auth/login", data);
-};
+export default authService;

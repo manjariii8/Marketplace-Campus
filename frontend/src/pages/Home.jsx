@@ -1,17 +1,21 @@
 import Hero from "../components/home/Hero";
-import CategorySection from "../components/home/CategorySection";
+import Categories from "../components/home/Categories";
 import FeaturedProducts from "../components/home/FeaturedProducts";
-import StatsSection from "../components/home/StatsSection";
+// import PromoBanner from "../components/home/PromoBanner";
+import WhyChooseUs from "../components/home/WhyChooseUs";
+
 
 const Home = () => {
-  return (
-    <>
-      <Hero />
-      <CategorySection />
-      <FeaturedProducts />
-      <StatsSection />
-    </>
-  );
+    return (
+        <>
+            <Hero />
+            <Categories />
+            <FeaturedProducts />
+            <WhyChooseUs />
+            {/* <PromoBanner />
+            */}
+        </>
+    );
 };
 
 export default Home;

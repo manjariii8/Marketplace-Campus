@@ -13,13 +13,8 @@ const DashboardHeader = () => {
         </p>
       </div>
 
-      <Link
-        to="/seller/products/add"
-        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition"
-      >
-        <FiPlus />
-        Add Product
-      </Link>
+      
+
     </div>
   );
 };

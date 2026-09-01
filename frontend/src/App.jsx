@@ -1,21 +1,122 @@
 import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
+
+/* Customer */
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import OrderSuccess from "./pages/OrderSuccess";
+import Products from "./pages/Products";
+import Search from "./pages/Search";
+import Wishlist from "./pages/Wishlist";
+import Profile from "./pages/Profile";
+import Categories from "./components/home/Categories";
+import ProductDetails from "./pages/ProductDetails";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import SellerProductDetails from "./pages/SellerProductDetails";
+
+/* Authentication */
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import AuthLayout from "./layouts/AuthLayout";
+
+/* Seller */
+import SellerLayout from "./layouts/SellerLayout";
+import SellerDashboard from "./pages/SellerDashboard";
+import SellerProducts from "./pages/SellerProducts";
+import SellerOrders from "./pages/SellerOrders";
+import SellerProfile from "./pages/SellerProfile";
+import AddProduct from "./pages/AddProducts";
+import EditProduct from "./pages/EditProduct";
+import SellerEditProfile from "./pages/SellerEditProfile";
+/* Admin */
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import Users from "./admin/pages/Users";
+import Sellers from "./admin/pages/Sellers";
+import AdminProducts from "./admin/pages/AdminProducts";
+import AdminCategories from "./admin/pages/AdminCategories";
+import AdminOrders from "./admin/pages/AdminOrders";
+import Analytics from "./admin/pages/Analytics";
+
 
 function App() {
   return (
     <Routes>
+      {/* =========================
+          CUSTOMER WEBSITE
+      ========================== */}
       <Route element={<MainLayout />}>
+        {/* Home */}
         <Route path="/" element={<Home />} />
+
+        {/* Product listing */}
+        <Route path="/products" element={<Products />} />
+
+        {/* Categories */}
+        <Route path="/categories" element={<Categories />} />
+
+        {/* Individual product */}
+        <Route path="/product/:id" element={<ProductDetails />} />
+
+        {/* Cart */}
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/search" element={<Search />} />
+
+        <Route path="/wishlist" element={<Wishlist />} />
+
+        <Route path="/profile" element={<Profile />} />
+
+        <Route path="/checkout" element={<Checkout />} />
       </Route>
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/order-success" element={<OrderSuccess />} />
+      {/* =========================
+          AUTHENTICATION
+      ========================== */}
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+        <Route path="/seller/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+      </Route>
+
+      {/* =========================
+          SELLER
+      ========================== */}
+      <Route element={<SellerLayout />}>
+        <Route path="/seller" element={<SellerDashboard />} />
+
+        <Route path="/seller/products" element={<SellerProducts />} />
+
+        <Route path="/seller/products/:id" element={<SellerProductDetails />} />
+
+        <Route path="/seller/products/add" element={<AddProduct />} />
+
+        <Route path="/seller/products/edit/:id" element={<EditProduct />} />
+
+        <Route path="/seller/orders" element={<SellerOrders />} />
+
+        <Route path="/seller/profile" element={<SellerProfile />} />
+
+        <Route path="/seller/profile/edit" element={<SellerEditProfile />} />
+      </Route>
+
+      {/* =========================
+          ADMIN
+      ========================== */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<Users />} />
+        <Route path="/admin/sellers" element={<Sellers />} />
+
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/categories" element={<AdminCategories />} />
+
+        <Route path="/admin/orders" element={<AdminOrders />} />
+
+        <Route path="/admin/analytics" element={<Analytics />} />
+      </Route>
     </Routes>
   );
 }

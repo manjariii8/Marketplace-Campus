@@ -1,24 +1,47 @@
+import { Package } from "lucide-react";
+
 const ProductGallery = ({ product }) => {
+  console.log("PRODUCT GALLERY:", product);
+  console.log("IMAGE DATA:", product?.imageData);
+
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-        <img
-          src="https://placehold.co/700x550/f8fafc/1e293b?text=Product"
-          alt={product.name}
-          className="h-[500px] w-full object-cover hover:scale-105 transition duration-500"
-        />
+
+      {/* Main Image */}
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        <div className="flex h-[500px] items-center justify-center bg-slate-50">
+
+          {product?.imageData ? (
+            <img
+              src={product.imageData}
+              alt={product?.name || "Product"}
+              className="h-full w-full object-contain p-6"
+              onError={(e) => {
+                console.error("IMAGE FAILED TO LOAD");
+                console.error("IMAGE:", product.imageData);
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-slate-400">
+
+              <Package
+                size={80}
+                strokeWidth={1.2}
+              />
+
+              <p className="mt-4 text-sm">
+                No product image available
+              </p>
+
+            </div>
+          )}
+
+        </div>
+
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
-        {[1, 2, 3, 4].map((item) => (
-          <img
-            key={item}
-            src={`https://placehold.co/150x150/f8fafc/1e293b?text=${item}`}
-            alt=""
-            className="rounded-xl border cursor-pointer hover:border-blue-600"
-          />
-        ))}
-      </div>
     </div>
   );
 };

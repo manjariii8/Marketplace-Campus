@@ -5,7 +5,7 @@ import {
   getProduct,
   updateProduct,
 } from "../services/productService";
-import BackButton from "../components/common/BackButton";
+import toast from "react-hot-toast";
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -38,7 +38,7 @@ const EditProduct = () => {
       });
     } catch (error) {
       console.error(error);
-      alert("Unable to load product.");
+      toast.error("Unable to load product.");
     }
   }
 
@@ -50,12 +50,12 @@ const EditProduct = () => {
     try {
       await updateProduct(id, formData);
 
-      alert("Product updated successfully.");
+      toast.success("Product updated successfully.");
 
       navigate("/seller");
     } catch (error) {
       console.error(error);
-      alert("Unable to update product.");
+      toast.error("Unable to update product.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,6 @@ const EditProduct = () => {
   return (
     <div className="bg-slate-100 min-h-screen">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <BackButton/>
 
         <h1 className="mb-8 text-4xl font-bold text-slate-800">
           Edit Product

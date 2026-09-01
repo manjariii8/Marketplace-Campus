@@ -11,35 +11,55 @@ const FilterSidebar = ({
   onApply,
 }) => {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadCategories();
   }, []);
 
-  async function loadCategories() {
+  const loadCategories = async () => {
+    setLoading(true);
+
     try {
       const response = await getCategories();
-      setCategories(response.data.data);
+
+      console.log("Categories API response:", response.data);
+
+      const categoryData = response.data?.data;
+
+      setCategories(
+        Array.isArray(categoryData) ? categoryData : []
+      );
     } catch (error) {
-      console.error(error);
+      console.error("Failed to load categories:", error);
+      setCategories([]);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <aside className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm">
+    <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-      <h3 className="text-xl font-bold text-slate-800 mb-6">
+      <h3 className="mb-6 text-xl font-bold text-slate-800">
         Filters
       </h3>
 
-      <label className="block mb-2 font-medium">Category</label>
+      {/* CATEGORY */}
+
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
+        Category
+      </label>
 
       <select
         value={categoryId}
         onChange={(e) => setCategoryId(e.target.value)}
-        className="w-full rounded-lg border p-3 mb-5"
+        disabled={loading}
+        className="mb-6 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-700 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
       >
-        <option value="">All Categories</option>
+        <option value="">
+          {loading ? "Loading categories..." : "All Categories"}
+        </option>
 
         {categories.map((category) => (
           <option
@@ -51,34 +71,46 @@ const FilterSidebar = ({
         ))}
       </select>
 
-      <label className="block mb-2 font-medium">
+      {/* MIN PRICE */}
+
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
         Minimum Price
       </label>
 
       <input
         type="number"
+        min="0"
         value={minPrice}
         onChange={(e) => setMinPrice(e.target.value)}
-        className="w-full rounded-lg border p-3 mb-5"
+        placeholder="₹ Minimum"
+        className="mb-5 w-full rounded-xl border border-slate-300 p-3 text-slate-700 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       />
 
-      <label className="block mb-2 font-medium">
+      {/* MAX PRICE */}
+
+      <label className="mb-2 block text-sm font-semibold text-slate-700">
         Maximum Price
       </label>
 
       <input
         type="number"
+        min="0"
         value={maxPrice}
         onChange={(e) => setMaxPrice(e.target.value)}
-        className="w-full rounded-lg border p-3 mb-6"
+        placeholder="₹ Maximum"
+        className="mb-6 w-full rounded-xl border border-slate-300 p-3 text-slate-700 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
       />
 
+      {/* APPLY */}
+
       <button
+        type="button"
         onClick={onApply}
-        className="w-full rounded-xl bg-blue-600 py-3 text-white font-semibold hover:bg-blue-700 transition"
+        className="w-full rounded-xl bg-blue-600 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
       >
         Apply Filters
       </button>
+
     </aside>
   );
 };

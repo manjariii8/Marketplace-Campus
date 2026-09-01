@@ -1,47 +1,144 @@
-import { FiHeart, FiShoppingCart } from "react-icons/fi";
+import { useEffect, useState } from "react";
 
-const WishlistCard = ({ item, onRemove, onMoveToCart }) => {
+import WishlistGrid from "../../components/wishlist/WishlistGrid";
+import { getWishlist } from "../../services/wishlistService";
+
+const Wishlist = () => {
+
+  const [items, setItems] = useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
+
+
+  useEffect(() => {
+
+    loadWishlist();
+
+  }, []);
+
+
+  async function loadWishlist() {
+
+    try {
+
+      setLoading(true);
+      setError("");
+
+      const response =
+        await getWishlist();
+
+      console.log(
+        "Wishlist API response:",
+        response.data
+      );
+
+      const result =
+        response?.data;
+
+      /*
+       * Handle different API response structures.
+       */
+
+      let wishlistItems = [];
+
+      if (Array.isArray(result)) {
+
+        wishlistItems = result;
+
+      } else if (Array.isArray(result?.data)) {
+
+        wishlistItems = result.data;
+
+      } else if (Array.isArray(result?.content)) {
+
+        wishlistItems = result.content;
+
+      }
+
+      setItems(wishlistItems);
+
+    } catch (error) {
+
+      console.error(
+        "Failed to load wishlist:",
+        error
+      );
+
+      setError(
+        error?.response?.data?.message ||
+        "Unable to load wishlist."
+      );
+
+      setItems([]);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  }
+
+
+  if (loading) {
+
+    return (
+      <div className="min-h-screen bg-slate-50 py-20 text-center">
+
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+
+        <p className="mt-4 text-slate-500">
+          Loading wishlist...
+        </p>
+
+      </div>
+    );
+
+  }
+
+
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden hover:shadow-lg transition">
+    <div className="min-h-screen bg-slate-50 py-12">
 
-      <img
-        src="https://placehold.co/400x280?text=Product"
-        alt={item.productName}
-        className="h-56 w-full object-cover"
-      />
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-      <div className="p-5">
+        <div className="mb-8">
 
-        <h3 className="text-xl font-semibold text-slate-800">
-          {item.productName}
-        </h3>
+          <h1 className="text-4xl font-bold text-slate-900">
+            My Wishlist
+          </h1>
 
-        <p className="mt-2 text-slate-500">
-          {item.categoryName}
-        </p>
-
-        <p className="mt-4 text-2xl font-bold text-blue-600">
-          ₹{item.price}
-        </p>
-
-        <div className="mt-6 flex gap-3">
-
-          <button
-            onClick={() => onMoveToCart(item.productId)}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
-          >
-            <FiShoppingCart />
-            Move to Cart
-          </button>
-
-          <button
-            onClick={() => onRemove(item.productId)}
-            className="rounded-xl border border-red-500 px-4 text-red-600 hover:bg-red-50"
-          >
-            <FiHeart />
-          </button>
+          <p className="mt-2 text-slate-500">
+            Your saved products.
+          </p>
 
         </div>
+
+
+        {error ? (
+
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
+
+            <h2 className="font-bold text-red-700">
+              Unable to load wishlist
+            </h2>
+
+            <p className="mt-2 text-red-600">
+              {error}
+            </p>
+
+          </div>
+
+        ) : (
+
+          <WishlistGrid
+            items={items}
+          />
+
+        )}
 
       </div>
 
@@ -49,4 +146,4 @@ const WishlistCard = ({ item, onRemove, onMoveToCart }) => {
   );
 };
 
-export default WishlistCard;
+export default Wishlist;

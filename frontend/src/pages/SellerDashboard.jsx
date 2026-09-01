@@ -1,29 +1,34 @@
-import SellerSidebar from "../components/seller/SellerSidebar";
-import DashboardCards from "../components/seller/DashboardCards";
+import DashboardCard from "../components/seller/DashboardCard";
 import DashboardHeader from "../components/seller/DashboardHeader";
 import ProductTable from "../components/seller/ProductTable";
 
 const SellerDashboard = () => {
-  return (
-    <div className="flex bg-slate-100 min-h-screen">
-      <SellerSidebar />
 
-      <main className="flex-1 p-8">
+  return (
+    <div className="min-h-screen bg-slate-100">
+
+      <main className="mx-auto max-w-[1600px] p-6 lg:p-8">
+
+        {/* Header */}
+
         <DashboardHeader />
 
-        <DashboardCards />
+        {/* Statistics */}
 
-        <div className="mt-10 rounded-2xl bg-white border border-slate-200 p-8 shadow-sm">
-          <h2 className="text-2xl font-bold mb-4">Recent Products</h2>
-
-          <p className="text-slate-500">
-            We'll connect this table to your backend in the next step.
-          </p>
+        <div className="mt-8">
+          <DashboardCard />
         </div>
-        <div className="mt-10">
+
+        {/* Products */}
+
+        <div className="mt-8">
+
           <ProductTable />
+
         </div>
+
       </main>
+
     </div>
   );
 };
