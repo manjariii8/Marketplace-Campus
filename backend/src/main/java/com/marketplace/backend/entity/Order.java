@@ -1,5 +1,6 @@
 package com.marketplace.backend.entity;
 
+import com.marketplace.backend.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -56,6 +57,7 @@ public class Order {
 
     private BigDecimal tax;
     @Column(unique = true)
+
     private String orderNumber;
 
 

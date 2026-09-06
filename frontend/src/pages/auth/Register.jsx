@@ -60,8 +60,6 @@ const Register = () => {
         role: data.role,
       };
 
-      console.log("Registration payload:", payload);
-
       await registerUser(payload);
 
       toast.success("Account created successfully!");

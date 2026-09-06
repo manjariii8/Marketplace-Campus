@@ -142,18 +142,36 @@ const ProductCard = ({ product }) => {
           IMAGE
       ====================================================== */}
 
-      <div className="relative overflow-hidden">
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          className="h-full w-full object-cover"
-        />
+      <div className="relative overflow-hidden bg-slate-100">
+        <div className="aspect-square">
+          {product?.imageUrl || product?.imageData ? (
+            <img
+              src={product.imageUrl || product.imageData}
+              alt={product?.name || "Product"}
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              onError={(e) => {
+                console.error("PRODUCT IMAGE FAILED");
+                console.error("imageUrl:", product?.imageUrl);
+                console.error("imageData:", product?.imageData);
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-slate-400">
+              <div className="text-center">
+                <div className="text-5xl">📦</div>
+                <p className="mt-2 text-sm">No image</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* DISCOUNT */}
-
-        <span className="absolute left-4 top-4 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
-          20% OFF
-        </span>
+        {product.discountPercentage > 0 && (
+          <span className="absolute left-4 top-4 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
+            {product.discountPercentage}% OFF
+          </span>
+        )}
 
         {/* ACTION BUTTONS */}
 
@@ -222,15 +240,17 @@ const ProductCard = ({ product }) => {
         </div>
 
         {/* PRICE */}
-
         <div className="mt-5 flex items-center gap-3">
           <span className="text-2xl font-bold text-blue-700">
             ₹{product.price}
           </span>
 
-          <span className="text-sm text-slate-400 line-through">
-            ₹{Math.round((Number(product.price) || 0) * 1.2)}
-          </span>
+          {product.originalPrice &&
+            Number(product.originalPrice) > Number(product.price) && (
+              <span className="text-sm text-slate-400 line-through">
+                ₹{product.originalPrice}
+              </span>
+            )}
         </div>
 
         {/* STOCK */}

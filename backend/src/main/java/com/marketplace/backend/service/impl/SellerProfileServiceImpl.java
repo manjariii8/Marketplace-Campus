@@ -38,6 +38,7 @@ public class SellerProfileServiceImpl implements SellerProfileService {
                 .address(request.getAddress())
                 .description(request.getDescription())
                 .verified(false)
+
                 .user(user)
                 .build();
         sellerProfileRepository.save(profile);

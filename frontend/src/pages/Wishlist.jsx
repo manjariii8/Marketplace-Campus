@@ -32,10 +32,7 @@ const Wishlist = () => {
     try {
       const response = await getWishlist();
 
-      console.log(
-        "Wishlist response:",
-        response.data
-      );
+      
 
       /*
        * Backend WishlistController returns:

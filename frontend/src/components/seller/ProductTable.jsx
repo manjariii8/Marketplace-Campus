@@ -23,7 +23,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
-import { deleteProduct, getMyProducts } from "../../services/productService";
+import {
+  deleteProduct,
+  getMyProducts,
+} from "../../services/productService";
+
+import ConfirmModal from "../../components/common/ConfirmModal";
 
 const ProductTable = () => {
   const navigate = useNavigate();
@@ -31,6 +36,12 @@ const ProductTable = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+
+  // Delete confirmation modal
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    product: null,
+  });
 
   useEffect(() => {
     loadProducts();
@@ -49,19 +60,50 @@ const ProductTable = () => {
       console.error("Unable to load seller products:", error);
 
       toast.error(
-        error?.response?.data?.message || "Unable to load your products.",
+        error?.response?.data?.message ||
+          "Unable to load your products.",
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (product) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${product.name}"?\n\nThis action cannot be undone.`,
-    );
+  /* =====================================================
+     OPEN DELETE MODAL
+  ===================================================== */
 
-    if (!confirmed) return;
+  const handleDeleteClick = (product) => {
+    // Don't open another delete operation while one is running
+    if (deletingId !== null) return;
+
+    setDeleteModal({
+      isOpen: true,
+      product,
+    });
+  };
+
+  /* =====================================================
+     CLOSE DELETE MODAL
+  ===================================================== */
+
+  const handleDeleteCancel = () => {
+    // Don't allow closing while deletion is happening
+    if (deletingId !== null) return;
+
+    setDeleteModal({
+      isOpen: false,
+      product: null,
+    });
+  };
+
+  /* =====================================================
+     DELETE PRODUCT
+  ===================================================== */
+
+  const handleDeleteConfirm = async () => {
+    const product = deleteModal.product;
+
+    if (!product) return;
 
     try {
       setDeletingId(product.id);
@@ -69,27 +111,43 @@ const ProductTable = () => {
       await deleteProduct(product.id);
 
       setProducts((currentProducts) =>
-        currentProducts.filter((item) => item.id !== product.id),
+        currentProducts.filter(
+          (item) => item.id !== product.id,
+        ),
       );
 
       toast.success("Product deleted successfully.");
+
+      // Close modal after successful deletion
+      setDeleteModal({
+        isOpen: false,
+        product: null,
+      });
     } catch (error) {
       console.error("Delete product error:", error);
 
       toast.error(
-        error?.response?.data?.message || "Unable to delete product.",
+        error?.response?.data?.message ||
+          "Unable to delete product.",
       );
     } finally {
       setDeletingId(null);
     }
   };
 
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex min-h-[250px] items-center justify-center">
           <div className="flex items-center gap-3 text-slate-500">
-            <Loader2 size={24} className="animate-spin text-blue-600" />
+            <Loader2
+              size={24}
+              className="animate-spin text-blue-600"
+            />
 
             <span>Loading your products...</span>
           </div>
@@ -99,184 +157,246 @@ const ProductTable = () => {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      {/* HEADER */}
+    <>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {/* HEADER */}
 
-      <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">My Products</h2>
+        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">
+              My Products
+            </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Manage all products listed in your store.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-            {products.length} {products.length === 1 ? "Product" : "Products"}
-          </span>
-
-          <button
-            onClick={() => navigate("/seller/products/add")}
-            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            + Add Product
-          </button>
-        </div>
-      </div>
-
-      {/* EMPTY */}
-
-      {products.length === 0 ? (
-        <div className="flex min-h-[300px] flex-col items-center justify-center px-6 text-center">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
-            <ShoppingBag size={30} className="text-blue-500" />
+            <p className="mt-1 text-sm text-slate-500">
+              Manage all products listed in your store.
+            </p>
           </div>
 
-          <h3 className="text-lg font-semibold text-slate-700">
-            No products yet
-          </h3>
+          <div className="flex items-center gap-3">
+            <span className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+              {products.length}{" "}
+              {products.length === 1
+                ? "Product"
+                : "Products"}
+            </span>
 
-          <p className="mt-2 max-w-md text-sm text-slate-500">
-            Start selling by adding your first product to the marketplace.
-          </p>
-
-          <button
-            onClick={() => navigate("/seller/products/add")}
-            className="mt-5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Add Your First Product
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/seller/products/add")
+              }
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              + Add Product
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Product
-                </th>
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Category
-                </th>
+        {/* EMPTY */}
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Price
-                </th>
+        {products.length === 0 ? (
+          <div className="flex min-h-[300px] flex-col items-center justify-center px-6 text-center">
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+              <ShoppingBag
+                size={30}
+                className="text-blue-500"
+              />
+            </div>
 
-                <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Stock
-                </th>
+            <h3 className="text-lg font-semibold text-slate-700">
+              No products yet
+            </h3>
 
-                <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
+            <p className="mt-2 max-w-md text-sm text-slate-500">
+              Start selling by adding your first product
+              to the marketplace.
+            </p>
 
-            <tbody className="divide-y divide-slate-100">
-              {products.map((product) => {
-                const category =
-                  product.categoryName || product.category?.name || "";
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/seller/products/add")
+              }
+              className="mt-5 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Add Your First Product
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Product
+                  </th>
 
-                return (
-                  <tr key={product.id} className="transition hover:bg-slate-50">
-                    {/* PRODUCT */}
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Category
+                  </th>
 
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <ProductIcon product={product} category={category} />
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Price
+                  </th>
 
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-800">
-                            {product.name}
-                          </p>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Stock
+                  </th>
 
-                          <p className="mt-1 max-w-xs truncate text-sm text-slate-500">
-                            {product.description || "No description"}
-                          </p>
+                  <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-slate-100">
+                {products.map((product) => {
+                  const category =
+                    product.categoryName ||
+                    product.category?.name ||
+                    "";
+
+                  return (
+                    <tr
+                      key={product.id}
+                      className="transition hover:bg-slate-50"
+                    >
+                      {/* PRODUCT */}
+
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <ProductIcon
+                            product={product}
+                            category={category}
+                          />
+
+                          <div className="min-w-0">
+                            <p className="font-semibold text-slate-800">
+                              {product.name}
+                            </p>
+
+                            <p className="mt-1 max-w-xs truncate text-sm text-slate-500">
+                              {product.description ||
+                                "No description"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* CATEGORY */}
+                      {/* CATEGORY */}
 
-                    <td className="whitespace-nowrap px-6 py-5">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                        {category || "Uncategorized"}
-                      </span>
-                    </td>
+                      <td className="whitespace-nowrap px-6 py-5">
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                          {category || "Uncategorized"}
+                        </span>
+                      </td>
 
-                    {/* PRICE */}
+                      {/* PRICE */}
 
-                    <td className="whitespace-nowrap px-6 py-5">
-                      <span className="font-semibold text-slate-800">
-                        ₹{Number(product.price || 0).toLocaleString("en-IN")}
-                      </span>
-                    </td>
+                      <td className="whitespace-nowrap px-6 py-5">
+                        <span className="font-semibold text-slate-800">
+                          ₹
+                          {Number(
+                            product.price || 0,
+                          ).toLocaleString("en-IN")}
+                        </span>
+                      </td>
 
-                    {/* STOCK */}
+                      {/* STOCK */}
 
-                    <td className="whitespace-nowrap px-6 py-5">
-                      <StockBadge stock={product.stock} />
-                    </td>
+                      <td className="whitespace-nowrap px-6 py-5">
+                        <StockBadge
+                          stock={product.stock}
+                        />
+                      </td>
 
-                    {/* ACTIONS */}
+                      {/* ACTIONS */}
 
-                    <td className="whitespace-nowrap px-6 py-5">
-                      <div className="flex justify-end gap-2">
-                        {/* VIEW */}
+                      <td className="whitespace-nowrap px-6 py-5">
+                        <div className="flex justify-end gap-2">
+                          {/* VIEW */}
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/seller/products/${product.id}`)
-                          }
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                          title="View product"
-                        >
-                          <Eye size={18} />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/seller/products/${product.id}`,
+                              )
+                            }
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                            title="View product"
+                          >
+                            <Eye size={18} />
+                          </button>
 
-                        {/* EDIT */}
+                          {/* EDIT */}
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/seller/products/edit/${product.id}`)
-                          }
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-                          title="Edit product"
-                        >
-                          <Edit size={18} />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/seller/products/edit/${product.id}`,
+                              )
+                            }
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                            title="Edit product"
+                          >
+                            <Edit size={18} />
+                          </button>
 
-                        {/* DELETE */}
+                          {/* DELETE */}
 
-                        <button
-                          type="button"
-                          disabled={deletingId === product.id}
-                          onClick={() => handleDelete(product)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-                          title="Delete product"
-                        >
-                          {deletingId === product.id ? (
-                            <Loader2 size={18} className="animate-spin" />
-                          ) : (
-                            <Trash2 size={18} />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+                          <button
+                            type="button"
+                            disabled={
+                              deletingId !== null
+                            }
+                            onClick={() =>
+                              handleDeleteClick(product)
+                            }
+                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 text-red-500 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Delete product"
+                          >
+                            {deletingId ===
+                            product.id ? (
+                              <Loader2
+                                size={18}
+                                className="animate-spin"
+                              />
+                            ) : (
+                              <Trash2 size={18} />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* =====================================================
+          DELETE CONFIRMATION MODAL
+      ===================================================== */}
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        title="Delete Product"
+        message={
+          deleteModal.product
+            ? `Are you sure you want to delete "${deleteModal.product.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deletingId !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+    </>
   );
 };
 
@@ -349,14 +469,18 @@ const ProductIcon = ({ product, category }) => {
     categoryLower.includes("shirt")
   ) {
     Icon = Shirt;
-  } else if (categoryLower.includes("furniture")) {
+  } else if (
+    categoryLower.includes("furniture")
+  ) {
     Icon = Sofa;
   } else if (
     categoryLower.includes("watch") ||
     categoryLower.includes("accessor")
   ) {
     Icon = Watch;
-  } else if (categoryLower.includes("book")) {
+  } else if (
+    categoryLower.includes("book")
+  ) {
     Icon = BookOpen;
   } else if (
     categoryLower.includes("headphone") ||

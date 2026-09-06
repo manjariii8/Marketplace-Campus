@@ -4,25 +4,35 @@ import {
   approveSeller,
   rejectSeller,
 } from "../services/adminService";
+import ConfirmModal from "../components/common/ConfirmModal";
 
 const Sellers = () => {
   const [sellers, setSellers] = useState([]);
   const [filter, setFilter] = useState("ALL");
+
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Reject confirmation modal
+  const [rejectModal, setRejectModal] = useState({
+    open: false,
+    seller: null,
+  });
 
   useEffect(() => {
     loadSellers();
   }, []);
 
+  // Load sellers
   const loadSellers = async () => {
     try {
       setLoading(true);
       setError("");
 
       const response = await getAdminSellers();
-
 
       setSellers(response.data);
     } catch (err) {
@@ -37,10 +47,12 @@ const Sellers = () => {
     }
   };
 
+  // Approve seller
   const handleApprove = async (sellerId) => {
     try {
       setProcessingId(sellerId);
       setError("");
+      setSuccess("");
 
       await approveSeller(sellerId);
 
@@ -54,6 +66,8 @@ const Sellers = () => {
             : seller
         )
       );
+
+      setSuccess("Seller approved successfully.");
     } catch (err) {
       console.error(err);
 
@@ -66,31 +80,61 @@ const Sellers = () => {
     }
   };
 
-  const handleReject = async (sellerId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to reject this seller?"
-    );
+  // Open reject confirmation modal
+  const handleRejectClick = (seller) => {
+    setRejectModal({
+      open: true,
+      seller,
+    });
 
-    if (!confirmed) {
+    setError("");
+    setSuccess("");
+  };
+
+  // Close reject modal
+  const closeRejectModal = () => {
+    if (processingId !== null) {
+      return;
+    }
+
+    setRejectModal({
+      open: false,
+      seller: null,
+    });
+  };
+
+  // Reject seller
+  const handleReject = async () => {
+    const seller = rejectModal.seller;
+
+    if (!seller) {
       return;
     }
 
     try {
-      setProcessingId(sellerId);
+      setProcessingId(seller.sellerId);
       setError("");
+      setSuccess("");
 
-      await rejectSeller(sellerId);
+      await rejectSeller(seller.sellerId);
 
       setSellers((current) =>
-        current.map((seller) =>
-          seller.sellerId === sellerId
+        current.map((item) =>
+          item.sellerId === seller.sellerId
             ? {
-                ...seller,
+                ...item,
                 status: "REJECTED",
               }
-            : seller
+            : item
         )
       );
+
+      setSuccess("Seller rejected successfully.");
+
+      setRejectModal({
+        open: false,
+        seller: null,
+      });
     } catch (err) {
       console.error(err);
 
@@ -103,6 +147,7 @@ const Sellers = () => {
     }
   };
 
+  // Filter sellers
   const filteredSellers =
     filter === "ALL"
       ? sellers
@@ -110,6 +155,7 @@ const Sellers = () => {
           (seller) => seller.status === filter
         );
 
+  // Status styling
   const getStatusStyle = (status) => {
     switch (status) {
       case "APPROVED":
@@ -145,6 +191,7 @@ const Sellers = () => {
           (status) => (
             <button
               key={status}
+              type="button"
               onClick={() => setFilter(status)}
               className={`rounded-xl px-5 py-2.5 text-sm font-semibold transition ${
                 filter === status
@@ -165,6 +212,13 @@ const Sellers = () => {
       {error && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
+        </div>
+      )}
+
+      {/* Success */}
+      {success && (
+        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
+          {success}
         </div>
       )}
 
@@ -201,6 +255,7 @@ const Sellers = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
+              {/* Loading */}
               {loading ? (
                 <tr>
                   <td
@@ -211,6 +266,7 @@ const Sellers = () => {
                   </td>
                 </tr>
               ) : filteredSellers.length === 0 ? (
+                /* Empty State */
                 <tr>
                   <td
                     colSpan="6"
@@ -220,6 +276,7 @@ const Sellers = () => {
                   </td>
                 </tr>
               ) : (
+                /* Sellers */
                 filteredSellers.map((seller) => (
                   <tr
                     key={seller.sellerId}
@@ -275,19 +332,21 @@ const Sellers = () => {
                     {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
+                        {/* Pending */}
                         {seller.status === "PENDING" && (
                           <>
+                            {/* Approve */}
                             <button
+                              type="button"
                               onClick={() =>
                                 handleApprove(
                                   seller.sellerId
                                 )
                               }
                               disabled={
-                                processingId ===
-                                seller.sellerId
+                                processingId !== null
                               }
-                              className="rounded-lg bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:opacity-50"
+                              className="rounded-lg bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {processingId ===
                               seller.sellerId
@@ -295,29 +354,30 @@ const Sellers = () => {
                                 : "Approve"}
                             </button>
 
+                            {/* Reject */}
                             <button
+                              type="button"
                               onClick={() =>
-                                handleReject(
-                                  seller.sellerId
-                                )
+                                handleRejectClick(seller)
                               }
                               disabled={
-                                processingId ===
-                                seller.sellerId
+                                processingId !== null
                               }
-                              className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                              className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               Reject
                             </button>
                           </>
                         )}
 
+                        {/* Approved */}
                         {seller.status === "APPROVED" && (
                           <span className="text-sm font-medium text-green-600">
                             Approved
                           </span>
                         )}
 
+                        {/* Rejected */}
                         {seller.status === "REJECTED" && (
                           <span className="text-sm font-medium text-red-600">
                             Rejected
@@ -340,6 +400,22 @@ const Sellers = () => {
           {filteredSellers.length !== 1 ? "s" : ""}
         </p>
       )}
+
+      {/* Reject Confirmation Modal */}
+      <ConfirmModal
+        isOpen={rejectModal.open}
+        title="Reject Seller"
+        message={
+          rejectModal.seller
+            ? `Are you sure you want to reject "${rejectModal.seller.sellerName}"?`
+            : ""
+        }
+        confirmText="Reject"
+        cancelText="Cancel"
+        loading={processingId !== null}
+        onConfirm={handleReject}
+        onCancel={closeRejectModal}
+      />
     </div>
   );
 };

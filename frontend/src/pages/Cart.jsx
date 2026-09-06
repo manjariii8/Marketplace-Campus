@@ -29,8 +29,6 @@ const Cart = () => {
 
             const response = await getCart();
 
-            console.log("CART RESPONSE:", response.data);
-
             /*
              * Backend ApiResponse:
              *

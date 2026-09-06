@@ -4,28 +4,41 @@ import {
   searchAdminUsers,
   deleteAdminUser,
 } from "../services/adminService";
+import ConfirmModal from "../components/common/ConfirmModal";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [keyword, setKeyword] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    user: null,
+  });
 
   useEffect(() => {
     loadUsers();
   }, []);
 
+  // =========================
+  // LOAD USERS
+  // =========================
   const loadUsers = async () => {
     try {
       setLoading(true);
       setError("");
+      setSuccess("");
 
       const response = await getAdminUsers();
 
-      setUsers(response.data);
+      setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Load users error:", err);
 
       setError(
         err.response?.data?.message ||
@@ -36,25 +49,29 @@ const Users = () => {
     }
   };
 
+  // =========================
+  // SEARCH USERS
+  // =========================
   const handleSearch = async (e) => {
     e.preventDefault();
 
-    if (!keyword.trim()) {
-      loadUsers();
+    const searchValue = keyword.trim();
+
+    if (!searchValue) {
+      await loadUsers();
       return;
     }
 
     try {
       setLoading(true);
       setError("");
+      setSuccess("");
 
-      const response = await searchAdminUsers(
-        keyword.trim()
-      );
+      const response = await searchAdminUsers(searchValue);
 
-      setUsers(response.data);
+      setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Search users error:", err);
 
       setError(
         err.response?.data?.message ||
@@ -65,31 +82,77 @@ const Users = () => {
     }
   };
 
-  const handleDelete = async (user) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${user.name}?`
-    );
+  // =========================
+  // OPEN DELETE MODAL
+  // =========================
+  const handleDeleteClick = (user) => {
+    if (!user || user.id == null) {
+      setError("Invalid user selected.");
+      return;
+    }
 
-    if (!confirmed) {
+    setError("");
+    setSuccess("");
+
+    setDeleteModal({
+      open: true,
+      user: user,
+    });
+  };
+
+  // =========================
+  // CLOSE DELETE MODAL
+  // =========================
+  const closeDeleteModal = () => {
+    if (deletingId !== null) {
+      return;
+    }
+
+    setDeleteModal({
+      open: false,
+      user: null,
+    });
+  };
+
+  // =========================
+  // DELETE USER
+  // =========================
+  const handleDelete = async () => {
+    const selectedUser = deleteModal.user;
+
+    if (!selectedUser || selectedUser.id == null) {
       return;
     }
 
     try {
-      setDeletingId(user.id);
+      setDeletingId(selectedUser.id);
       setError("");
+      setSuccess("");
 
-      await deleteAdminUser(user.id);
+      await deleteAdminUser(selectedUser.id);
 
+      // Remove deleted user from UI
       setUsers((currentUsers) =>
         currentUsers.filter(
-          (item) => item.id !== user.id
+          (user) => user.id !== selectedUser.id
         )
       );
+
+      setSuccess(
+        `User "${selectedUser.name}" deleted successfully.`
+      );
+
+      // Close modal
+      setDeleteModal({
+        open: false,
+        user: null,
+      });
     } catch (err) {
-      console.error(err);
+      console.error("Delete user error:", err);
 
       setError(
         err.response?.data?.message ||
+          err.response?.data?.error ||
           "Unable to delete user."
       );
     } finally {
@@ -97,6 +160,9 @@ const Users = () => {
     }
   };
 
+  // =========================
+  // ROLE BADGE
+  // =========================
   const getRoleStyle = (role) => {
     switch (role) {
       case "ADMIN":
@@ -115,7 +181,9 @@ const Users = () => {
 
   return (
     <div>
-      {/* Header */}
+      {/* =========================
+          HEADER
+      ========================= */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           Users
@@ -126,7 +194,9 @@ const Users = () => {
         </p>
       </div>
 
-      {/* Search */}
+      {/* =========================
+          SEARCH
+      ========================= */}
       <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <form
           onSubmit={handleSearch}
@@ -135,41 +205,55 @@ const Users = () => {
           <input
             type="text"
             value={keyword}
-            onChange={(e) =>
-              setKeyword(e.target.value)
-            }
+            onChange={(e) => setKeyword(e.target.value)}
             placeholder="Search by name or email..."
-            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            disabled={deletingId !== null}
+            className="flex-1 rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-50"
           />
 
           <button
             type="submit"
-            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+            disabled={loading || deletingId !== null}
+            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Search
+            {loading ? "Searching..." : "Search"}
           </button>
 
           <button
             type="button"
+            disabled={loading || deletingId !== null}
             onClick={() => {
               setKeyword("");
               loadUsers();
             }}
-            className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+            className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset
           </button>
         </form>
       </div>
 
-      {/* Error */}
+      {/* =========================
+          ERROR MESSAGE
+      ========================= */}
       {error && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
         </div>
       )}
 
-      {/* Table */}
+      {/* =========================
+          SUCCESS MESSAGE
+      ========================= */}
+      {success && (
+        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
+          {success}
+        </div>
+      )}
+
+      {/* =========================
+          USERS TABLE
+      ========================= */}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -198,6 +282,7 @@ const Users = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
+              {/* LOADING */}
               {loading ? (
                 <tr>
                   <td
@@ -208,6 +293,7 @@ const Users = () => {
                   </td>
                 </tr>
               ) : users.length === 0 ? (
+                /* EMPTY STATE */
                 <tr>
                   <td
                     colSpan="5"
@@ -217,61 +303,66 @@ const Users = () => {
                   </td>
                 </tr>
               ) : (
+                /* USERS */
                 users.map((user) => (
                   <tr
                     key={user.id}
                     className="transition hover:bg-gray-50"
                   >
+                    {/* ID */}
                     <td className="px-6 py-4 text-sm text-gray-500">
                       #{user.id}
                     </td>
 
+                    {/* USER */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
                           {user.name
-                            ?.charAt(0)
-                            .toUpperCase()}
+                            ? user.name
+                                .charAt(0)
+                                .toUpperCase()
+                            : "U"}
                         </div>
 
                         <span className="font-semibold text-gray-900">
-                          {user.name}
+                          {user.name || "Unknown User"}
                         </span>
                       </div>
                     </td>
 
+                    {/* EMAIL */}
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.email}
+                      {user.email || "-"}
                     </td>
 
+                    {/* ROLE */}
                     <td className="px-6 py-4">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${getRoleStyle(
                           user.role
                         )}`}
                       >
-                        {user.role}
+                        {user.role || "UNKNOWN"}
                       </span>
                     </td>
 
+                    {/* ACTION */}
                     <td className="px-6 py-4 text-right">
                       {user.role === "ADMIN" ? (
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm font-medium text-gray-400">
                           Protected
                         </span>
                       ) : (
                         <button
+                          type="button"
                           onClick={() =>
-                            handleDelete(user)
+                            handleDeleteClick(user)
                           }
-                          disabled={
-                            deletingId === user.id
-                          }
+                          disabled={deletingId !== null}
                           className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {deletingId === user.id
-                            ? "Deleting..."
-                            : "Delete"}
+                          Delete
                         </button>
                       )}
                     </td>
@@ -283,13 +374,33 @@ const Users = () => {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* =========================
+          FOOTER
+      ========================= */}
       {!loading && users.length > 0 && (
         <div className="mt-4 text-sm text-gray-500">
           Showing {users.length} user
           {users.length !== 1 ? "s" : ""}
         </div>
       )}
+
+      {/* =========================
+          DELETE CONFIRMATION MODAL
+      ========================= */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        title="Delete User"
+        message={
+          deleteModal.user
+            ? `Are you sure you want to delete "${deleteModal.user.name}"? This action cannot be undone.`
+            : "Are you sure you want to delete this user?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deletingId !== null}
+        onConfirm={handleDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 };

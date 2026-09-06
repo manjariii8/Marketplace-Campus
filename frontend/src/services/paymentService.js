@@ -6,6 +6,14 @@ export const createPaymentOrder = (orderId) => {
   });
 };
 
-export const verifyPayment = (data) => {
-  return api.post("/payments/verify", data);
+export const verifyPayment = (
+  razorpayOrderId,
+  razorpayPaymentId,
+  razorpaySignature
+) => {
+  return api.post("/payments/verify", {
+    razorpayOrderId,
+    razorpayPaymentId,
+    razorpaySignature,
+  });
 };

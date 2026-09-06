@@ -37,8 +37,6 @@ const SellerEditProfile = () => {
     try {
       const response = await getSellerProfile();
 
-      console.log("GET PROFILE:", response.data);
-
       /*
        Your backend returns:
 
@@ -133,11 +131,8 @@ const SellerEditProfile = () => {
         description: formData.description.trim(),
       };
 
-      console.log("UPDATE PROFILE PAYLOAD:", payload);
-
       const response = await updateSellerProfile(payload);
 
-      console.log("UPDATE PROFILE RESPONSE:", response.data);
 
       toast.success("Seller profile updated successfully!");
 

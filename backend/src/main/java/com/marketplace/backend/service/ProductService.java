@@ -7,12 +7,15 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
-
 public interface ProductService {
 
     ProductResponse createProduct(String email, ProductRequest request);
 
-    ProductResponse updateProduct(Long id, String email, ProductRequest request);
+    ProductResponse updateProduct(
+            Long id,
+            String email,
+            ProductRequest request
+    );
 
     void deleteProduct(Long id, String email);
 
@@ -22,5 +25,5 @@ public interface ProductService {
 
     List<ProductResponse> getAllProducts();
 
-    List<ProductResponse> getProductsBySeller(String name);
+    List<ProductResponse> getProductsBySeller(String email);
 }

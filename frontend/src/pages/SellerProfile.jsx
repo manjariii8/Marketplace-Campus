@@ -87,7 +87,6 @@ const SellerProfile = () => {
 
       const response = await sellerService.updateProfile(formData);
 
-      console.log("Updated seller profile:", response.data);
 
       const updatedProfile = response?.data?.data || response?.data || {};
 
@@ -130,8 +129,6 @@ const SellerProfile = () => {
       setError("");
 
       const response = await sellerService.getProfile();
-
-      console.log("Seller profile response:", response.data);
 
       /*
        * Supports:

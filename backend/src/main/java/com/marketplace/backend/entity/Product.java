@@ -31,10 +31,15 @@ public class Product {
     private Integer stock;
 
     @Builder.Default
+    @Column(nullable = false)
     private Boolean active = true;
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Lob
+    @Column(name = "image_data", columnDefinition = "LONGTEXT")
+    private String imageData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)

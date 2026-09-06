@@ -32,16 +32,25 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        if(userRepository.existsByEmail(request.getEmail())){
-            throw new DuplicateResourceException("Category already exists");
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException(
+                    "Email is already registered"
+            );
         }
 
-        com.marketplace.backend.entity.User user = com.marketplace.backend.entity.User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.CUSTOMER)
-                .build();
+        com.marketplace.backend.entity.User user =
+                com.marketplace.backend.entity.User.builder()
+                        .name(request.getName())
+                        .email(request.getEmail())
+                        .password(
+                                passwordEncoder.encode(
+                                        request.getPassword()
+                                )
+                        )
+                        .role(request.getRole())
+                        .build();
+
         userRepository.save(user);
 
         UserDetails userDetails = User.builder()
@@ -49,10 +58,17 @@ public class AuthServiceImpl implements AuthService {
                 .password(user.getPassword())
                 .roles(user.getRole().name())
                 .build();
+
         String token = jwtService.generateToken(userDetails);
-        return new AuthResponse(token, "Registration successful");
 
-
+        return new AuthResponse(
+                token,
+                "Registration successful",
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole()
+        );
     }
 
     @Override
@@ -77,7 +93,14 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtService.generateToken(userDetails);
         log.info("User logged in successfully. Email={}", request.getEmail());
 
-        return new AuthResponse(token, "Login successful");
+        return new AuthResponse(
+                token,
+                "Login successful",
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole()
+        );
 
     }
 }

@@ -12,7 +12,13 @@ import Categories from "./components/home/Categories";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import OrderSuccess from "./pages/OrderSuccess";
+import Orders from "./pages/Orders";
+import OrderDetails from "./pages/OrderDetails";
 import SellerProductDetails from "./pages/SellerProductDetails";
+import HelpCenter from "./pages/HelpCenter";
+import ContactSupport from "./pages/ContactSupport";
+import FAQs from "./pages/FAQs";
 
 /* Authentication */
 import Login from "./pages/auth/Login";
@@ -38,7 +44,6 @@ import AdminProducts from "./admin/pages/AdminProducts";
 import AdminCategories from "./admin/pages/AdminCategories";
 import AdminOrders from "./admin/pages/AdminOrders";
 import Analytics from "./admin/pages/Analytics";
-
 
 function App() {
   return (
@@ -68,6 +73,12 @@ function App() {
         <Route path="/profile" element={<Profile />} />
 
         <Route path="/checkout" element={<Checkout />} />
+
+        <Route path="/order-success" element={<OrderSuccess />} />
+
+        <Route path="/orders" element={<Orders />} />
+
+        <Route path="/orders/:id" element={<OrderDetails />} />
       </Route>
 
       {/* =========================
@@ -117,6 +128,14 @@ function App() {
 
         <Route path="/admin/analytics" element={<Analytics />} />
       </Route>
+
+      {/* =========================
+          OTHERS
+      ========================== */}
+      <Route path="/help-center" element={<HelpCenter />} />
+      <Route path="/contact-support" element={<ContactSupport />} />
+      <Route path="/faqs" element={<FAQs />} />
+      
     </Routes>
   );
 }

@@ -9,20 +9,36 @@ import java.math.BigDecimal;
 public class ProductRequest {
 
     @NotBlank(message = "Product name is required")
-    @Size(min = 3, max = 100, message = "Product name must be between 3 and 100 characters")
+    @Size(
+            min = 3,
+            max = 100,
+            message = "Product name must be between 3 and 100 characters"
+    )
     private String name;
 
-    @Size(max = 2000, message = "Description cannot exceed 2000 characters")
+    @Size(
+            max = 2000,
+            message = "Description cannot exceed 2000 characters"
+    )
     private String description;
 
     @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.01", message = "Price must be greater than 0")
+    @DecimalMin(
+            value = "0.0",
+            message = "Price must be greater than 0"
+    )
     private BigDecimal price;
 
     @NotNull(message = "Stock is required")
-    @Min(value = 0, message = "Stock cannot be negative")
+    @Min(
+            value = 0,
+            message = "Stock cannot be negative"
+    )
     private Integer stock;
 
     @NotNull(message = "Category is required")
     private Long categoryId;
+
+    // NEW
+    private String imageData;
 }

@@ -31,11 +31,7 @@ const AddProduct = () => {
       imageData: formData.imageData,
     };
 
-    console.log("PRODUCT DATA:", productData);
-
     const response = await createProduct(productData);
-
-    console.log("CREATED PRODUCT:", response.data);
 
     toast.success("Product added successfully!");
 

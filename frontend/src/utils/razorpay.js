@@ -15,15 +15,15 @@ export async function openRazorpay(
 
     handler: async function (response) {
       try {
-        await verifyPayment({
-          razorpayOrderId: response.razorpay_order_id,
-          razorpayPaymentId: response.razorpay_payment_id,
-          razorpaySignature: response.razorpay_signature,
-        });
+        await verifyPayment(
+          response.razorpay_order_id,
+          response.razorpay_payment_id,
+          response.razorpay_signature
+        );
 
         onSuccess(response);
       } catch (error) {
-        console.error(error);
+        console.error("Payment verification failed:", error);
         onFailure(error);
       }
     },

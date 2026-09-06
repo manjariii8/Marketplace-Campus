@@ -6,18 +6,28 @@ import {
   showProduct,
   deleteAdminProduct,
 } from "../services/adminService";
+import ConfirmModal from "../components/common/ConfirmModal";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [keyword, setKeyword] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+
   const [error, setError] = useState("");
+
+  // Delete confirmation modal
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    product: null,
+  });
 
   useEffect(() => {
     loadProducts();
   }, []);
 
+  // Load all products
   const loadProducts = async () => {
     try {
       setLoading(true);
@@ -38,6 +48,7 @@ const Products = () => {
     }
   };
 
+  // Search products
   const handleSearch = async (e) => {
     e.preventDefault();
 
@@ -67,6 +78,7 @@ const Products = () => {
     }
   };
 
+  // Show / Hide product
   const handleToggleVisibility = async (product) => {
     try {
       setProcessingId(product.id);
@@ -100,12 +112,33 @@ const Products = () => {
     }
   };
 
-  const handleDelete = async (product) => {
-    const confirmed = window.confirm(
-      `Delete "${product.name}" permanently?`
-    );
+  // Open delete confirmation modal
+  const handleDeleteClick = (product) => {
+    setDeleteModal({
+      open: true,
+      product,
+    });
 
-    if (!confirmed) {
+    setError("");
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteModal = () => {
+    if (processingId !== null) {
+      return;
+    }
+
+    setDeleteModal({
+      open: false,
+      product: null,
+    });
+  };
+
+  // Delete product after confirmation
+  const handleDelete = async () => {
+    const product = deleteModal.product;
+
+    if (!product) {
       return;
     }
 
@@ -120,6 +153,11 @@ const Products = () => {
           (item) => item.id !== product.id
         )
       );
+
+      setDeleteModal({
+        open: false,
+        product: null,
+      });
     } catch (err) {
       console.error(err);
 
@@ -132,12 +170,14 @@ const Products = () => {
     }
   };
 
+  // Status badge styling
   const getStatusStyle = (active) => {
     return active
       ? "bg-green-100 text-green-700"
       : "bg-gray-100 text-gray-600";
   };
 
+  // Stock styling
   const getStockStyle = (stock) => {
     if (stock === 0) {
       return "text-red-600 font-semibold";
@@ -181,18 +221,20 @@ const Products = () => {
 
           <button
             type="submit"
-            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+            disabled={loading}
+            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Search
           </button>
 
           <button
             type="button"
+            disabled={loading}
             onClick={() => {
               setKeyword("");
               loadProducts();
             }}
-            className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+            className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset
           </button>
@@ -243,6 +285,7 @@ const Products = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
+              {/* Loading */}
               {loading ? (
                 <tr>
                   <td
@@ -253,6 +296,7 @@ const Products = () => {
                   </td>
                 </tr>
               ) : products.length === 0 ? (
+                /* Empty state */
                 <tr>
                   <td
                     colSpan="7"
@@ -262,6 +306,7 @@ const Products = () => {
                   </td>
                 </tr>
               ) : (
+                /* Products */
                 products.map((product) => (
                   <tr
                     key={product.id}
@@ -335,16 +380,19 @@ const Products = () => {
                     {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
+                        {/* Show / Hide */}
                         <button
+                          type="button"
                           onClick={() =>
                             handleToggleVisibility(
                               product
                             )
                           }
                           disabled={
-                            processingId === product.id
+                            processingId === product.id ||
+                            processingId !== null
                           }
-                          className={`rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                          className={`rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                             product.active
                               ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
                               : "bg-green-50 text-green-700 hover:bg-green-100"
@@ -357,14 +405,16 @@ const Products = () => {
                             : "Show"}
                         </button>
 
+                        {/* Delete */}
                         <button
+                          type="button"
                           onClick={() =>
-                            handleDelete(product)
+                            handleDeleteClick(product)
                           }
                           disabled={
-                            processingId === product.id
+                            processingId !== null
                           }
-                          className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                          className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Delete
                         </button>
@@ -385,6 +435,22 @@ const Products = () => {
           {products.length !== 1 ? "s" : ""}
         </p>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        title="Delete Product"
+        message={
+          deleteModal.product
+            ? `Are you sure you want to delete "${deleteModal.product.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={processingId !== null}
+        onConfirm={handleDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 };

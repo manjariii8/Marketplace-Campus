@@ -13,8 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -29,14 +29,24 @@ public class ProductController {
             Authentication authentication,
             @Valid @RequestBody ProductRequest request) {
 
+        if (authentication == null ||
+                !authentication.isAuthenticated()) {
+
+            throw new RuntimeException(
+                    "Seller authentication is required"
+            );
+        }
+
         ProductResponse response =
                 productService.createProduct(
                         authentication.getName(),
-                        request);
+                        request
+                );
 
         return ResponseUtil.success(
                 "Product created successfully",
-                response);
+                response
+        );
     }
     @Operation(summary = "Get all products")
     @GetMapping

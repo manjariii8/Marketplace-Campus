@@ -10,5 +10,6 @@ public interface ProductMapper {
 
     @Mapping(source = "seller.shopName", target = "sellerName")
     @Mapping(source = "category.name", target = "categoryName")
+    @Mapping(source = "imageData", target = "imageData")
     ProductResponse toResponse(Product product);
 }

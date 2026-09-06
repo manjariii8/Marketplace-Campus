@@ -28,4 +28,6 @@ public class ProductResponse {
     private String sellerName;
 
     private String categoryName;
+
+    private String imageData;
 }

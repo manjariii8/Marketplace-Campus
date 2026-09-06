@@ -10,5 +10,6 @@ public interface SellerProfileMapper {
 
     @Mapping(source = "user.name", target = "ownerName")
     @Mapping(source = "user.email", target = "ownerEmail")
+    @Mapping(source = "createdAt", target = "createdAt")
     SellerProfileResponse toResponse(SellerProfile sellerProfile);
 }

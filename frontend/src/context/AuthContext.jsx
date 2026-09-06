@@ -2,9 +2,10 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
+
+import { useNavigate } from "react-router-dom";
 
 import authService from "../services/authService";
 
@@ -20,31 +21,37 @@ import {
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(getUser());
+  const [user, setUser] = useState(() => getUser());
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   /*
    * Authentication is determined by the token.
-   *
-   * We don't need a separate setIsAuthenticated state.
    */
   const isAuthenticated = Boolean(getToken());
 
+  /*
+   * Initialize authentication state
+   */
   useEffect(() => {
     const initialize = async () => {
       try {
         const token = getToken();
 
+        // No token means user is not authenticated
         if (!token) {
           setUser(null);
           return;
         }
 
+        // Token exists, check for stored user
         const storedUser = getUser();
 
         if (storedUser) {
           setUser(storedUser);
         } else {
+          // Token exists but user information is missing
           removeToken();
           removeUser();
           setUser(null);
@@ -66,17 +73,13 @@ export const AuthProvider = ({ children }) => {
     initialize();
   }, []);
 
+  /*
+   * LOGIN
+   */
   const login = async (credentials) => {
-    const response =
-      await authService.login(credentials);
+    const response = await authService.login(credentials);
 
-    console.log(
-      "LOGIN API RESPONSE:",
-      response.data
-    );
-
-    const authData =
-      response.data?.data;
+    const authData = response.data?.data;
 
     if (!authData) {
       throw new Error(
@@ -105,45 +108,54 @@ export const AuthProvider = ({ children }) => {
       );
     }
 
+    // Save authentication information
     saveToken(token);
     saveUser(loggedInUser);
 
+    // Update React state
     setUser(loggedInUser);
-
-    console.log(
-      "LOGGED IN USER:",
-      loggedInUser
-    );
 
     return loggedInUser;
   };
 
+  /*
+   * REGISTER
+   */
   const register = async (payload) => {
     return authService.register(payload);
   };
 
+  /*
+   * LOGOUT
+   */
   const logout = () => {
-    console.log("Logging out...");
 
     removeToken();
     removeUser();
 
     setUser(null);
+
+    navigate("/login", {
+      replace: true,
+    });
   };
+
+  /*
+   * UPDATE USER
+   */
   const updateUser = (updatedData) => {
-  const currentUser = getUser();
+    const currentUser = getUser();
 
-  const updatedUser = {
-    ...currentUser,
-    ...updatedData,
+    const updatedUser = {
+      ...currentUser,
+      ...updatedData,
+    };
+
+    saveUser(updatedUser);
+    setUser(updatedUser);
   };
 
-  saveUser(updatedUser);
-  setUser(updatedUser);
-};
-
-  const value = useMemo(
-  () => ({
+  const value = {
     user,
     loading,
     login,
@@ -151,13 +163,7 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     register,
     isAuthenticated,
-  }),
-  [
-    user,
-    loading,
-    isAuthenticated,
-  ]
-);
+  };
 
   return (
     <AuthContext.Provider value={value}>
@@ -166,9 +172,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
+/*
+ * CUSTOM AUTH HOOK
+ */
 export const useAuth = () => {
-  const context =
-    useContext(AuthContext);
+  const context = useContext(AuthContext);
 
   if (!context) {
     throw new Error(
@@ -180,3 +188,4 @@ export const useAuth = () => {
 };
 
 export default useAuth;
+

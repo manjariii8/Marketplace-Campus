@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.marketplace.backend.exception.ErrorResponse.*;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -48,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalOrderStateException(
             IllegalOrderStateException ex) {
 
-        ErrorResponse error = ErrorResponse.builder()
+        ErrorResponse error = builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
@@ -128,6 +130,35 @@ public class GlobalExceptionHandler {
 
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
 
+    }
+    @ExceptionHandler(PaymentVerificationException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentVerificationException(
+            PaymentVerificationException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse error = builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+    @ExceptionHandler(CategoryDeletionException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryDeletion(
+            CategoryDeletionException exception
+    ) {
+        Map<String, String> response = new HashMap<>();
+
+        response.put("message", exception.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(response);
     }
 
     private ResponseEntity<Object> buildResponse(

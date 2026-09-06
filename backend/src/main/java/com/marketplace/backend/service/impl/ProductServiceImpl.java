@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -38,22 +39,39 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
 
     @Override
-    public ProductResponse createProduct(String email, ProductRequest request) {
+    public ProductResponse createProduct(
+            String email,
+            ProductRequest request) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
 
-        SellerProfile seller = sellerProfileRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException("Seller profile not found"));
+        SellerProfile seller = sellerProfileRepository
+                .findByUser(user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Seller profile not found"));
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        Category category = categoryRepository
+                .findById(request.getCategoryId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found"));
+
+        /*
+         * Product is active only when stock is greater than 0.
+         */
+        boolean active = request.getStock() != null
+                && request.getStock() > 0;
 
         Product product = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .stock(request.getStock())
+                .active(active)
+                .imageData(request.getImageData())
                 .seller(seller)
                 .category(category)
                 .build();
@@ -62,7 +80,8 @@ public class ProductServiceImpl implements ProductService {
 
         return productMapper.toResponse(product);
     }
-
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
 
         return productRepository.findByActiveTrue()
@@ -72,12 +91,30 @@ public class ProductServiceImpl implements ProductService {
 
     }
 
+
+
     @Override
-    public List<ProductResponse> getProductsBySeller(String name) {
-        return List.of();
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getProductsBySeller(String email) {
+
+        SellerProfile seller = sellerProfileRepository
+                .findByUserEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Seller profile not found for email: " + email
+                        )
+                );
+
+        List<Product> products =
+                productRepository.findBySeller_Id(seller.getId());
+
+        return products.stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
@@ -89,32 +126,56 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse updateProduct(Long id, String email, ProductRequest request) {
+    public ProductResponse updateProduct(
+            Long id,
+            String email,
+            ProductRequest request) {
+
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        SellerProfile seller = sellerProfileRepository.findByUser(user)
-                .orElseThrow(() -> new ResourceNotFoundException("Seller profile not found"));
-
-        Product product = productRepository.findByIdAndSellerId(id, seller.getId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found or access denied"));
+                        new ResourceNotFoundException("User not found"));
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        SellerProfile seller = sellerProfileRepository
+                .findByUser(user)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Seller profile not found"));
+
+        Product product = productRepository
+                .findByIdAndSellerId(id, seller.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Product not found or access denied"));
+
+        Category category = categoryRepository
+                .findById(request.getCategoryId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Category not found"));
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
         product.setCategory(category);
+        product.setImageData(request.getImageData());
+
+        /*
+         * Automatically determine product status from stock.
+         */
+        product.setActive(
+                request.getStock() != null &&
+                        request.getStock() > 0
+        );
 
         productRepository.save(product);
 
         log.info(
-                "Product created successfully. ProductId={}, SellerId={}",
+                "Product updated. ProductId={}, SellerId={}, Stock={}, Active={}",
                 product.getId(),
-                seller.getId()
+                seller.getId(),
+                product.getStock(),
+                product.getActive()
         );
 
         return productMapper.toResponse(product);

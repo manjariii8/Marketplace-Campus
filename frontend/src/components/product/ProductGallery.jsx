@@ -1,8 +1,6 @@
 import { Package } from "lucide-react";
 
 const ProductGallery = ({ product }) => {
-  console.log("PRODUCT GALLERY:", product);
-  console.log("IMAGE DATA:", product?.imageData);
 
   return (
     <div className="space-y-4">

@@ -31,11 +31,6 @@ const Wishlist = () => {
       const response =
         await getWishlist();
 
-      console.log(
-        "Wishlist API response:",
-        response.data
-      );
-
       const result =
         response?.data;
 

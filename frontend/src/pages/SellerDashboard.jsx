@@ -3,32 +3,24 @@ import DashboardHeader from "../components/seller/DashboardHeader";
 import ProductTable from "../components/seller/ProductTable";
 
 const SellerDashboard = () => {
-
   return (
     <div className="min-h-screen bg-slate-100">
-
-      <main className="mx-auto max-w-[1600px] p-6 lg:p-8">
+      <main className="mx-auto max-w-[1600px] px-6 py-2 lg:px-8">
 
         {/* Header */}
-
         <DashboardHeader />
 
         {/* Statistics */}
-
-        <div className="mt-8">
+        <div className="mt-2">
           <DashboardCard />
         </div>
 
         {/* Products */}
-
-        <div className="mt-8">
-
+        <div className="mt-4">
           <ProductTable />
-
         </div>
 
       </main>
-
     </div>
   );
 };

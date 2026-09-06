@@ -3,6 +3,7 @@ package com.marketplace.backend.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.*;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
 import java.util.List;
 
@@ -25,5 +26,14 @@ public class CorsConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+    public void addResourceHandlers(
+            ResourceHandlerRegistry registry) {
+
+        registry
+                .addResourceHandler("/uploads/**")
+                .addResourceLocations(
+                        "file:uploads/"
+                );
     }
 }

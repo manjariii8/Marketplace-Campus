@@ -8,16 +8,29 @@ import {
   FileText,
   Tag,
   Loader2,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 import { getCategories } from "../../services/categoryService";
 
-const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
+const ProductForm = ({
+  formData,
+  setFormData,
+  onSubmit,
+  loading,
+  error = "",
+  success = "",
+}) => {
   const [categories, setCategories] = useState([]);
   const [categoryLoading, setCategoryLoading] = useState(true);
   const [categoryError, setCategoryError] = useState("");
 
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imagePreview, setImagePreview] = useState(
+    formData?.imageData || null,
+  );
+
+  const [imageError, setImageError] = useState("");
 
   const fileInputRef = useRef(null);
 
@@ -36,10 +49,8 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
 
       const response = await getCategories();
 
-      console.log("Categories response:", response.data);
-
       /*
-       * Supports both:
+       * Supports:
        *
        * { data: [...] }
        *
@@ -48,21 +59,30 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
        * { success: true, data: [...] }
        */
 
-      const categoryData = response?.data?.data || response?.data || [];
+      const categoryData =
+        response?.data?.data ||
+        response?.data ||
+        [];
 
       if (Array.isArray(categoryData)) {
         setCategories(categoryData);
       } else {
         setCategories([]);
-        setCategoryError("Invalid category response from server.");
+        setCategoryError(
+          "Invalid category response from server.",
+        );
       }
     } catch (error) {
-      console.error("Unable to load categories:", error);
+      console.error(
+        "Unable to load categories:",
+        error,
+      );
 
       setCategories([]);
 
       setCategoryError(
-        error?.response?.data?.message || "Unable to load categories.",
+        error?.response?.data?.message ||
+          "Unable to load categories. Please try again.",
       );
     } finally {
       setCategoryLoading(false);
@@ -89,26 +109,59 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
 
+    setImageError("");
+
     if (!file) {
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
+    /*
+     * Validate image type
+     */
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setImageError(
+        "Please upload a JPG, PNG, or WEBP image.",
+      );
+
       e.target.value = "";
       return;
     }
 
+    /*
+     * Validate image size
+     */
+
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size must be less than 2 MB.");
+      setImageError(
+        "Image size must be less than 2 MB.",
+      );
+
       e.target.value = "";
       return;
     }
+
+    /*
+     * Read image
+     */
 
     const reader = new FileReader();
 
     reader.onloadend = () => {
       const base64Image = reader.result;
+
+      if (!base64Image) {
+        setImageError(
+          "Unable to process the selected image.",
+        );
+        return;
+      }
 
       setFormData((previous) => ({
         ...previous,
@@ -116,13 +169,22 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
       }));
 
       setImagePreview(base64Image);
+      setImageError("");
     };
+
     reader.onerror = () => {
-      alert("Unable to read image.");
+      setImageError(
+        "Unable to read this image. Please try another file.",
+      );
     };
 
     reader.readAsDataURL(file);
   };
+
+  /* =========================
+     REMOVE IMAGE
+  ========================= */
+
   const removeImage = () => {
     setFormData((previous) => ({
       ...previous,
@@ -130,13 +192,73 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
     }));
 
     setImagePreview(null);
+    setImageError("");
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
+
+  /* =========================
+     OPEN FILE PICKER
+  ========================= */
+
+  const openFilePicker = () => {
+    setImageError("");
+    fileInputRef.current?.click();
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
+    <form
+      onSubmit={onSubmit}
+      className="space-y-8"
+    >
+      {/* =========================
+          GLOBAL ERROR
+      ========================= */}
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4">
+          <AlertCircle
+            size={20}
+            className="mt-0.5 shrink-0 text-red-600"
+          />
+
+          <div>
+            <p className="font-semibold text-red-800">
+              Something went wrong
+            </p>
+
+            <p className="mt-1 text-sm text-red-700">
+              {error}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* =========================
+          SUCCESS
+      ========================= */}
+
+      {success && (
+        <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+          <CheckCircle2
+            size={20}
+            className="mt-0.5 shrink-0 text-emerald-600"
+          />
+
+          <div>
+            <p className="font-semibold text-emerald-800">
+              Success
+            </p>
+
+            <p className="mt-1 text-sm text-emerald-700">
+              {success}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* =========================
           BASIC INFORMATION
       ========================= */}
@@ -148,7 +270,9 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
           </div>
 
           <div>
-            <h3 className="font-semibold text-slate-900">Basic Information</h3>
+            <h3 className="font-semibold text-slate-900">
+              Basic Information
+            </h3>
 
             <p className="text-sm text-slate-500">
               Enter the main details of your product.
@@ -176,7 +300,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter product name"
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
@@ -201,7 +325,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
                 onChange={handleChange}
                 placeholder="Describe your product..."
                 rows={5}
-                className="w-full resize-none rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full resize-none rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
@@ -220,7 +344,9 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
           </div>
 
           <div>
-            <h3 className="font-semibold text-slate-900">Category</h3>
+            <h3 className="font-semibold text-slate-900">
+              Category
+            </h3>
 
             <p className="text-sm text-slate-500">
               Choose the category that best matches your product.
@@ -241,41 +367,65 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
           required
         >
           <option value="">
-            {categoryLoading ? "Loading categories..." : "Select a category"}
+            {categoryLoading
+              ? "Loading categories..."
+              : "Select a category"}
           </option>
 
           {categories.map((category) => (
-            <option key={category.id} value={category.id}>
+            <option
+              key={category.id}
+              value={category.id}
+            >
               {category.name}
             </option>
           ))}
         </select>
 
         {categoryError && (
-          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <p className="text-sm text-red-600">{categoryError}</p>
+          <div className="mt-3 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <AlertCircle
+              size={18}
+              className="mt-0.5 shrink-0 text-red-600"
+            />
 
-            <button
-              type="button"
-              onClick={loadCategories}
-              className="mt-2 text-sm font-semibold text-red-700 underline"
-            >
-              Try again
-            </button>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-700">
+                {categoryError}
+              </p>
+
+              <button
+                type="button"
+                onClick={loadCategories}
+                className="mt-2 text-sm font-semibold text-red-700 underline underline-offset-2 transition hover:text-red-900"
+              >
+                Try again
+              </button>
+            </div>
           </div>
         )}
 
-        {!categoryLoading && !categoryError && categories.length === 0 && (
-          <p className="mt-2 text-sm text-amber-600">
-            No categories are available. Please create categories from the admin
-            panel first.
-          </p>
-        )}
+        {!categoryLoading &&
+          !categoryError &&
+          categories.length === 0 && (
+            <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <AlertCircle
+                size={18}
+                className="mt-0.5 shrink-0 text-amber-600"
+              />
+
+              <p className="text-sm text-amber-700">
+                No categories are available.
+                Please create categories from the
+                admin panel first.
+              </p>
+            </div>
+          )}
       </section>
 
       {/* =========================
-    PRICE & STOCK
-========================= */}
+          PRICE & STOCK
+      ========================= */}
 
       <section>
         <div className="mb-5 flex items-center gap-3">
@@ -295,9 +445,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {/* =========================
-        PRICE
-    ========================= */}
+          {/* PRICE */}
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -318,7 +466,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
                 value={formData.price}
                 onChange={handleChange}
                 placeholder="Enter product price"
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
@@ -328,9 +476,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
             </p>
           </div>
 
-          {/* =========================
-        STOCK
-    ========================= */}
+          {/* STOCK */}
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -351,7 +497,7 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
                 value={formData.stock}
                 onChange={handleChange}
                 placeholder="Enter stock quantity"
-                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 required
               />
             </div>
@@ -374,7 +520,9 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
           </div>
 
           <div>
-            <h3 className="font-semibold text-slate-900">Product Image</h3>
+            <h3 className="font-semibold text-slate-900">
+              Product Image
+            </h3>
 
             <p className="text-sm text-slate-500">
               Upload a clear image of your product.
@@ -385,10 +533,11 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
         {!imagePreview ? (
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 transition hover:border-blue-500 hover:bg-blue-50"
+            onClick={openFilePicker}
+            disabled={loading}
+            className="group flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 transition hover:border-blue-500 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-blue-600 transition group-hover:scale-105 group-hover:bg-blue-200">
               <ImagePlus size={26} />
             </div>
 
@@ -408,14 +557,41 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
               className="h-80 w-full object-contain"
             />
 
+            <div className="absolute left-4 top-4 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow">
+              Image selected
+            </div>
+
             <button
               type="button"
               onClick={removeImage}
-              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition hover:bg-red-700"
+              disabled={loading}
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               title="Remove image"
+              aria-label="Remove image"
             >
               <X size={20} />
             </button>
+          </div>
+        )}
+
+        {/* IMAGE ERROR */}
+
+        {imageError && (
+          <div className="mt-3 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <AlertCircle
+              size={18}
+              className="mt-0.5 shrink-0 text-red-600"
+            />
+
+            <div>
+              <p className="text-sm font-semibold text-red-700">
+                Image upload failed
+              </p>
+
+              <p className="mt-1 text-sm text-red-600">
+                {imageError}
+              </p>
+            </div>
           </div>
         )}
 
@@ -437,19 +613,30 @@ const ProductForm = ({ formData, setFormData, onSubmit, loading }) => {
           type="button"
           onClick={() => window.history.back()}
           disabled={loading}
-          className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          disabled={loading || categoryLoading}
+          disabled={
+            loading ||
+            categoryLoading ||
+            !!imageError
+          }
           className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-7 py-3 font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading && <Loader2 size={18} className="animate-spin" />}
+          {loading && (
+            <Loader2
+              size={18}
+              className="animate-spin"
+            />
+          )}
 
-          {loading ? "Adding Product..." : "Add Product"}
+          {loading
+            ? "Adding Product..."
+            : "Add Product"}
         </button>
       </div>
     </form>

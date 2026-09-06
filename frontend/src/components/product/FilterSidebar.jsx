@@ -23,7 +23,6 @@ const FilterSidebar = ({
     try {
       const response = await getCategories();
 
-      console.log("Categories API response:", response.data);
 
       const categoryData = response.data?.data;
 

@@ -1,6 +1,4 @@
 package com.marketplace.backend.dto.order;
-
-import com.marketplace.backend.entity.OrderStatus;
 import lombok.Builder;
 import lombok.Data;
 

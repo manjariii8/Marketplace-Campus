@@ -5,12 +5,12 @@ import {
   updateAdminCategory,
   deleteAdminCategory,
 } from "../services/adminService";
+import ConfirmModal from "../components/common/ConfirmModal";
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
 
   const [name, setName] = useState("");
-
   const [editingId, setEditingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -20,10 +20,16 @@ const Categories = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    category: null,
+  });
+
   useEffect(() => {
     loadCategories();
   }, []);
 
+  // Load all categories
   const loadCategories = async () => {
     try {
       setLoading(true);
@@ -36,20 +42,21 @@ const Categories = () => {
       console.error(err);
 
       setError(
-        err.response?.data?.message ||
-          "Unable to load categories."
+        err.response?.data?.message || "Unable to load categories."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // Reset form
   const resetForm = () => {
     setName("");
     setEditingId(null);
     setError("");
   };
 
+  // Create / Update category
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -67,7 +74,7 @@ const Categories = () => {
         name: name.trim(),
       };
 
-      if (editingId) {
+      if (editingId !== null) {
         const response = await updateAdminCategory(
           editingId,
           categoryData
@@ -75,22 +82,15 @@ const Categories = () => {
 
         setCategories((current) =>
           current.map((category) =>
-            category.id === editingId
-              ? response.data
-              : category
+            category.id === editingId ? response.data : category
           )
         );
 
         setSuccess("Category updated successfully.");
       } else {
-        const response = await createAdminCategory(
-          categoryData
-        );
+        const response = await createAdminCategory(categoryData);
 
-        setCategories((current) => [
-          ...current,
-          response.data,
-        ]);
+        setCategories((current) => [...current, response.data]);
 
         setSuccess("Category created successfully.");
       }
@@ -100,14 +100,14 @@ const Categories = () => {
       console.error(err);
 
       setError(
-        err.response?.data?.message ||
-          "Unable to save category."
+        err.response?.data?.message || "Unable to save category."
       );
     } finally {
       setSaving(false);
     }
   };
 
+  // Edit category
   const handleEdit = (category) => {
     setEditingId(category.id);
     setName(category.name);
@@ -121,14 +121,32 @@ const Categories = () => {
     });
   };
 
-  const handleDelete = async (category) => {
-    const confirmed = window.confirm(
-      `Delete "${category.name}"?`
-    );
+  // Open delete confirmation modal
+  const handleDeleteClick = (category) => {
+    setDeleteModal({
+      open: true,
+      category,
+    });
 
-    if (!confirmed) {
-      return;
-    }
+    setError("");
+    setSuccess("");
+  };
+
+  // Close delete modal
+  const closeDeleteModal = () => {
+    if (deletingId !== null) return;
+
+    setDeleteModal({
+      open: false,
+      category: null,
+    });
+  };
+
+  // Delete category
+  const handleDelete = async () => {
+    const category = deleteModal.category;
+
+    if (!category) return;
 
     try {
       setDeletingId(category.id);
@@ -138,18 +156,25 @@ const Categories = () => {
       await deleteAdminCategory(category.id);
 
       setCategories((current) =>
-        current.filter(
-          (item) => item.id !== category.id
-        )
+        current.filter((item) => item.id !== category.id)
       );
 
+      // If currently editing the deleted category, reset the form
+      if (editingId === category.id) {
+        resetForm();
+      }
+
       setSuccess("Category deleted successfully.");
+
+      setDeleteModal({
+        open: false,
+        category: null,
+      });
     } catch (err) {
       console.error(err);
 
       setError(
-        err.response?.data?.message ||
-          "Unable to delete category."
+        err.response?.data?.message || "Unable to delete category."
       );
     } finally {
       setDeletingId(null);
@@ -169,13 +194,14 @@ const Categories = () => {
         </p>
       </div>
 
-      {/* Messages */}
+      {/* Error Message */}
       {error && (
         <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
         </div>
       )}
 
+      {/* Success Message */}
       {success && (
         <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
           {success}
@@ -186,13 +212,11 @@ const Categories = () => {
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-5">
           <h2 className="text-xl font-bold text-gray-900">
-            {editingId
-              ? "Edit Category"
-              : "Add Category"}
+            {editingId !== null ? "Edit Category" : "Add Category"}
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            {editingId
+            {editingId !== null
               ? "Update the category name."
               : "Create a new product category."}
           </p>
@@ -205,9 +229,7 @@ const Categories = () => {
           <input
             type="text"
             value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
+            onChange={(e) => setName(e.target.value)}
             placeholder="Enter category name"
             className="flex-1 rounded-xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
@@ -219,16 +241,17 @@ const Categories = () => {
           >
             {saving
               ? "Saving..."
-              : editingId
-              ? "Update Category"
-              : "Add Category"}
+              : editingId !== null
+                ? "Update Category"
+                : "Add Category"}
           </button>
 
-          {editingId && (
+          {editingId !== null && (
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+              disabled={saving}
+              className="rounded-xl border border-gray-300 px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -238,6 +261,7 @@ const Categories = () => {
 
       {/* Categories Table */}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        {/* Table Header */}
         <div className="border-b px-6 py-5">
           <h2 className="text-xl font-bold text-gray-900">
             All Categories
@@ -249,6 +273,7 @@ const Categories = () => {
           </p>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="border-b bg-gray-50">
@@ -268,6 +293,7 @@ const Categories = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-100">
+              {/* Loading */}
               {loading ? (
                 <tr>
                   <td
@@ -278,6 +304,7 @@ const Categories = () => {
                   </td>
                 </tr>
               ) : categories.length === 0 ? (
+                /* Empty State */
                 <tr>
                   <td
                     colSpan="3"
@@ -287,15 +314,18 @@ const Categories = () => {
                   </td>
                 </tr>
               ) : (
+                /* Categories */
                 categories.map((category) => (
                   <tr
                     key={category.id}
                     className="transition hover:bg-gray-50"
                   >
+                    {/* ID */}
                     <td className="px-6 py-4 text-sm text-gray-500">
                       #{category.id}
                     </td>
 
+                    {/* Category Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -308,29 +338,29 @@ const Categories = () => {
                       </div>
                     </td>
 
+                    {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
+                        {/* Edit */}
                         <button
-                          onClick={() =>
-                            handleEdit(category)
-                          }
-                          className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                          type="button"
+                          onClick={() => handleEdit(category)}
+                          disabled={deletingId !== null}
+                          className="rounded-lg bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Edit
                         </button>
 
+                        {/* Delete */}
                         <button
+                          type="button"
                           onClick={() =>
-                            handleDelete(category)
+                            handleDeleteClick(category)
                           }
-                          disabled={
-                            deletingId === category.id
-                          }
-                          className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                          disabled={deletingId !== null}
+                          className="rounded-lg bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {deletingId === category.id
-                            ? "Deleting..."
-                            : "Delete"}
+                          Delete
                         </button>
                       </div>
                     </td>
@@ -341,6 +371,24 @@ const Categories = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.open}
+        title="Delete Category"
+        message={
+          deleteModal.category
+            ? `Are you sure you want to delete "${deleteModal.category.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmText={
+          deletingId !== null ? "Deleting..." : "Delete"
+        }
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        onCancel={closeDeleteModal}
+        loading={deletingId !== null}
+      />
     </div>
   );
 };
