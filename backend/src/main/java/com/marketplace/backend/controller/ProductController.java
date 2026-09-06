@@ -61,13 +61,7 @@ public class ProductController {
 
     }
 
-    @GetMapping("/{id}")
-    public ProductResponse getProduct(
-            @PathVariable Long id) {
 
-        return productService.getProductById(id);
-
-    }
     @PutMapping("/{id}")
     public ProductResponse updateProduct(
             @PathVariable Long id,
@@ -97,5 +91,12 @@ public class ProductController {
     @GetMapping("/my-products")
     public List<ProductResponse> getMyProducts(Authentication authentication) {
         return productService.getProductsBySeller(authentication.getName());
+    }
+    @GetMapping("/{id}")
+    public ProductResponse getProduct(
+            @PathVariable Long id) {
+
+        return productService.getProductById(id);
+
     }
 }
