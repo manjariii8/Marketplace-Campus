@@ -130,7 +130,7 @@ public class AdminController {
 
         adminService.deleteProduct(id);
 
-        return ResponseEntity.ok("Product deleted successfully");
+        return ResponseEntity.ok("Product removed successfully");
 
     }
     @GetMapping("/categories")

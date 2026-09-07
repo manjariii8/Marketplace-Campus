@@ -231,6 +231,7 @@ public class AdminServiceImpl implements AdminService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Product not found"));
+        product.setActive(false);
 
         productRepository.delete(product);
 
