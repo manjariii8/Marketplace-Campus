@@ -22,7 +22,7 @@ public class CorsConfig implements WebMvcConfigurer {
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
-                        "https://marketplace-campus-tan.vercel.app"
+                        "frontend-one-pink-zwarks8a65.vercel.app"
                 )
         );
 
