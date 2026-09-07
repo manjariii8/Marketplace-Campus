@@ -38,7 +38,7 @@ public class AdminServiceImpl implements AdminService {
         return DashboardResponse.builder()
                 .totalUsers(userRepository.count())
                 .totalSellers(userRepository.countByRole(Role.SELLER))
-                .totalProducts(productRepository.count())
+                .totalProducts(productRepository.countByActiveTrue())
                 .totalOrders(orderRepository.count())
                 .totalRevenue(orderRepository.getTotalRevenue())
                 .build();
@@ -233,7 +233,7 @@ public class AdminServiceImpl implements AdminService {
                         new ResourceNotFoundException("Product not found"));
         product.setActive(false);
 
-        productRepository.delete(product);
+        productRepository.save(product);
 
     }
     private ProductResponse mapProduct(Product product){

@@ -87,4 +87,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>,
     long countBySeller_IdAndActiveTrue(
             Long sellerId
     );
+    long countByActiveTrue();
 }
