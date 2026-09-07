@@ -10,6 +10,7 @@ import com.marketplace.backend.exception.DuplicateResourceException;
 import com.marketplace.backend.exception.ResourceNotFoundException;
 import com.marketplace.backend.repository.*;
 import com.marketplace.backend.service.AdminService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.marketplace.backend.enums.OrderStatus;
@@ -225,12 +226,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long productId){
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Product not found"));
-        product.setActive(false);
+
 
         productRepository.save(product);
 
