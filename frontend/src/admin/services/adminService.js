@@ -28,6 +28,9 @@ export const approveSeller = (id) =>
 export const rejectSeller = (id) =>
   api.put(`/admin/sellers/${id}/reject`);
 
+export const deleteAdminSeller = (id) =>
+  api.delete(`/admin/sellers/${id}`);
+
 // ================= PRODUCTS =================
 
 export const getAdminProducts = () =>
