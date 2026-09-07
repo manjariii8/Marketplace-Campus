@@ -31,10 +31,10 @@ const categories = [
 
 const Categories = () => {
   return (
-    <div className="min-h-screen bg-slate-50 py-16">
+    <div className="bg-slate-50 pt-15 pb-15">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12 text-center">
+        <div className="mb-7 text-center">
           <h1 className="text-4xl font-bold text-slate-900">
             Shop by Category
           </h1>

@@ -50,11 +50,11 @@ const FeaturedProducts = () => {
   }
 
   return (
-    <section className="bg-slate-50 py-20">
+    <section className="bg-slate-50 pt-8 pb-4">
       <div className="mx-auto max-w-7xl px-6">
 
         {/* Header */}
-        <div className="mb-10 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="font-semibold uppercase tracking-wider text-blue-600">
               Latest Collection
