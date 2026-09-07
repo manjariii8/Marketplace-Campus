@@ -16,13 +16,12 @@ public class CorsConfig implements WebMvcConfigurer {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
                 List.of(
                         "http://localhost:5173",
-                        "frontend-one-pink-zwarks8a65.vercel.app"
+                        "https://frontend-one-pink-zwarks8a65.vercel.app"
                 )
         );
 
@@ -38,7 +37,19 @@ public class CorsConfig implements WebMvcConfigurer {
         );
 
         configuration.setAllowedHeaders(
-                List.of("*")
+                List.of(
+                        "Authorization",
+                        "Content-Type",
+                        "Accept",
+                        "Origin",
+                        "X-Requested-With"
+                )
+        );
+
+        configuration.setExposedHeaders(
+                List.of(
+                        "Authorization"
+                )
         );
 
         configuration.setAllowCredentials(true);

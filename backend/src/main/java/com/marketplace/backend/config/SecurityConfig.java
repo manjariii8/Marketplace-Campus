@@ -27,9 +27,21 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+                // =========================
+                // CORS
+                // =========================
 
                 .cors(cors -> {})
+
+                // =========================
+                // CSRF
+                // =========================
+
+                .csrf(csrf -> csrf.disable())
+
+                // =========================
+                // SESSION
+                // =========================
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
@@ -37,38 +49,73 @@ public class SecurityConfig {
                         )
                 )
 
+                // =========================
+                // AUTHORIZATION
+                // =========================
+
                 .authorizeHttpRequests(auth -> auth
 
                         // =========================
-                        // PUBLIC
+                        // CORS PREFLIGHT
                         // =========================
 
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/api/products/search",
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+                        // =========================
+                        // PUBLIC AUTH
+                        // =========================
+
+                        .requestMatchers(
+                                "/api/auth/**"
+                        ).permitAll()
+
+                        // =========================
+                        // PUBLIC PRODUCTS
+                        // =========================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products/search"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
                                 "/api/products/{id}"
                         ).permitAll()
 
-                        // Categories can be viewed publicly
+                        // =========================
+                        // PUBLIC CATEGORIES
+                        // =========================
+
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/categories/**"
                         ).permitAll()
 
-
                         // =========================
                         // ADMIN
                         // =========================
 
-                        .requestMatchers("/api/admin/**")
+                        .requestMatchers(
+                                "/api/admin/**"
+                        )
                         .hasRole("ADMIN")
-
 
                         // =========================
                         // SELLER
                         // =========================
 
-                        .requestMatchers("/api/seller/**")
+                        .requestMatchers(
+                                "/api/seller/**"
+                        )
                         .hasRole("SELLER")
 
                         .requestMatchers(
@@ -95,7 +142,6 @@ public class SecurityConfig {
                         )
                         .hasRole("SELLER")
 
-
                         // =========================
                         // CUSTOMER
                         // =========================
@@ -106,18 +152,6 @@ public class SecurityConfig {
                         )
                         .authenticated()
 
-
-                        // =========================
-                        // PUBLIC PRODUCT LIST
-                        // =========================
-
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/products"
-                        )
-                        .permitAll()
-
-
                         // =========================
                         // EVERYTHING ELSE
                         // =========================
@@ -126,7 +160,15 @@ public class SecurityConfig {
                         .permitAll()
                 )
 
+                // =========================
+                // AUTHENTICATION
+                // =========================
+
                 .authenticationProvider(authenticationProvider)
+
+                // =========================
+                // JWT FILTER
+                // =========================
 
                 .addFilterBefore(
                         jwtFilter,
