@@ -2,6 +2,12 @@ import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
 
+/* Route Guards */
+import PublicRoute from "./routes/PublicRoute";
+import CustomerRoute from "./routes/CustomerRoute";
+import SellerRoute from "./routes/SellerRoute";
+import AdminRoute from "./routes/AdminRoute";
+
 /* Customer */
 import Home from "./pages/Home";
 import Products from "./pages/Products";
@@ -16,6 +22,8 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Orders from "./pages/Orders";
 import OrderDetails from "./pages/OrderDetails";
 import SellerProductDetails from "./pages/SellerProductDetails";
+
+/* Support */
 import HelpCenter from "./pages/HelpCenter";
 import ContactSupport from "./pages/ContactSupport";
 import FAQs from "./pages/FAQs";
@@ -35,6 +43,7 @@ import SellerProfile from "./pages/SellerProfile";
 import AddProduct from "./pages/AddProducts";
 import EditProduct from "./pages/EditProduct";
 import SellerEditProfile from "./pages/SellerEditProfile";
+
 /* Admin */
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./admin/pages/AdminDashboard";
@@ -48,94 +57,247 @@ import Analytics from "./admin/pages/Analytics";
 function App() {
   return (
     <Routes>
-      {/* =========================
+
+      {/* =====================================================
           CUSTOMER WEBSITE
-      ========================== */}
+      ====================================================== */}
+
       <Route element={<MainLayout />}>
-        {/* Home */}
+
+        {/* Public customer pages */}
         <Route path="/" element={<Home />} />
 
-        {/* Product listing */}
         <Route path="/products" element={<Products />} />
 
-        {/* Categories */}
         <Route path="/categories" element={<Categories />} />
 
-        {/* Individual product */}
         <Route path="/product/:id" element={<ProductDetails />} />
 
-        {/* Cart */}
-        <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<Search />} />
-
-        <Route path="/wishlist" element={<Wishlist />} />
-
-        <Route path="/profile" element={<Profile />} />
-
-        <Route path="/checkout" element={<Checkout />} />
-
-        <Route path="/order-success" element={<OrderSuccess />} />
-
-        <Route path="/orders" element={<Orders />} />
-
-        <Route path="/orders/:id" element={<OrderDetails />} />
-      </Route>
-
-      {/* =========================
-          AUTHENTICATION
-      ========================== */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/register" element={<Register />} />
-        <Route path="/seller/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-      </Route>
-
-      {/* =========================
-          SELLER
-      ========================== */}
-      <Route element={<SellerLayout />}>
-        <Route path="/seller" element={<SellerDashboard />} />
-
-        <Route path="/seller/products" element={<SellerProducts />} />
 
         <Route path="/seller/products/:id" element={<SellerProductDetails />} />
 
-        <Route path="/seller/products/add" element={<AddProduct />} />
+        {/* Customer-only pages */}
+        <Route element={<CustomerRoute />}>
 
-        <Route path="/seller/products/edit/:id" element={<EditProduct />} />
+          <Route
+            path="/cart"
+            element={<Cart />}
+          />
 
-        <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route
+            path="/wishlist"
+            element={<Wishlist />}
+          />
 
-        <Route path="/seller/profile" element={<SellerProfile />} />
+          <Route
+            path="/profile"
+            element={<Profile />}
+          />
 
-        <Route path="/seller/profile/edit" element={<SellerEditProfile />} />
+          <Route
+            path="/checkout"
+            element={<Checkout />}
+          />
+
+          <Route
+            path="/order-success"
+            element={<OrderSuccess />}
+          />
+
+          <Route
+            path="/orders"
+            element={<Orders />}
+          />
+
+          <Route
+            path="/orders/:id"
+            element={<OrderDetails />}
+          />
+
+        </Route>
+
       </Route>
 
-      {/* =========================
+
+      {/* =====================================================
+          AUTHENTICATION
+      ====================================================== */}
+
+      <Route element={<AuthLayout />}>
+
+        <Route element={<PublicRoute />}>
+
+          <Route
+            path="/login"
+            element={<Login />}
+          />
+
+          <Route
+            path="/register"
+            element={<Register />}
+          />
+
+          <Route
+            path="/seller/register"
+            element={<Register />}
+          />
+
+          <Route
+            path="/forgot-password"
+            element={<ForgotPassword />}
+          />
+
+        </Route>
+
+      </Route>
+
+
+      {/* =====================================================
+          SELLER
+      ====================================================== */}
+
+      <Route element={<SellerRoute />}>
+
+        <Route element={<SellerLayout />}>
+
+          <Route
+            path="/seller"
+            element={<SellerDashboard />}
+          />
+
+          <Route
+            path="/seller/products"
+            element={<SellerProducts />}
+          />
+
+          <Route
+            path="/seller/products/:id"
+            element={<SellerProductDetails />}
+          />
+
+          <Route
+            path="/seller/products/add"
+            element={<AddProduct />}
+          />
+
+          <Route
+            path="/seller/products/edit/:id"
+            element={<EditProduct />}
+          />
+
+          <Route
+            path="/seller/orders"
+            element={<SellerOrders />}
+          />
+
+          <Route
+            path="/seller/profile"
+            element={<SellerProfile />}
+          />
+
+          <Route
+            path="/seller/profile/edit"
+            element={<SellerEditProfile />}
+          />
+
+        </Route>
+
+      </Route>
+
+
+      {/* =====================================================
           ADMIN
-      ========================== */}
-      <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/sellers" element={<Sellers />} />
+      ====================================================== */}
 
-        <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/categories" element={<AdminCategories />} />
+      <Route element={<AdminRoute />}>
 
-        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route element={<AdminLayout />}>
 
-        <Route path="/admin/analytics" element={<Analytics />} />
+          <Route
+            path="/admin"
+            element={<AdminDashboard />}
+          />
+
+          <Route
+            path="/admin/users"
+            element={<Users />}
+          />
+
+          <Route
+            path="/admin/sellers"
+            element={<Sellers />}
+          />
+
+          <Route
+            path="/admin/products"
+            element={<AdminProducts />}
+          />
+
+          <Route
+            path="/admin/categories"
+            element={<AdminCategories />}
+          />
+
+          <Route
+            path="/admin/orders"
+            element={<AdminOrders />}
+          />
+
+          <Route
+            path="/admin/analytics"
+            element={<Analytics />}
+          />
+
+        </Route>
+
       </Route>
 
-      {/* =========================
-          OTHERS
-      ========================== */}
-      <Route path="/help-center" element={<HelpCenter />} />
-      <Route path="/contact-support" element={<ContactSupport />} />
-      <Route path="/faqs" element={<FAQs />} />
-      
+
+      {/* =====================================================
+          SUPPORT / PUBLIC
+      ====================================================== */}
+
+      <Route
+        path="/help-center"
+        element={<HelpCenter />}
+      />
+
+      <Route
+        path="/contact-support"
+        element={<ContactSupport />}
+      />
+
+      <Route
+        path="/faqs"
+        element={<FAQs />}
+      />
+
+      {/* =====================================================
+          403
+      ====================================================== */}
+
+      <Route
+        path="/403"
+        element={
+          <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <div className="text-center">
+              <h1 className="text-7xl font-bold text-gray-900">
+                403
+              </h1>
+
+              <h2 className="mt-4 text-2xl font-bold text-gray-800">
+                Access Denied
+              </h2>
+
+              <p className="mt-2 text-gray-500">
+                You don't have permission to access this page.
+              </p>
+            </div>
+          </div>
+        }
+      />
+
     </Routes>
   );
 }
