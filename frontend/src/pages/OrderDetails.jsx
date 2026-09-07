@@ -230,16 +230,16 @@ const OrderDetails = () => {
     order?.paymentStatus?.toUpperCase();
 
   const isPending =
-    order.status === "PENDING";
+    order?.status === "PENDING";
 
   const isCancelled =
-    order.status === "CANCELLED";
+    order?.status === "CANCELLED";
 
   const isPaymentPaid =
-    paymentStatus === "PAID" ||
-    paymentStatus === "SUCCESS" ||
-    paymentStatus === "COMPLETED" ||
-    order.status !== "PENDING";
+  paymentStatus === "PAID" ||
+  paymentStatus === "SUCCESS" ||
+  paymentStatus === "COMPLETED" ||
+  (order?.status && order.status !== "PENDING");
 
   const isPaymentFailed =
     paymentStatus === "FAILED";
